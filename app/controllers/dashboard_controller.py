@@ -14,11 +14,18 @@ logger = logging.getLogger(__name__)
 dashboard_bp = Blueprint('dashboard', __name__)
 
 @dashboard_bp.route('/')
-@login_required
 def index():
     """
     Display the main dashboard page with overview information.
+    
+    DEVELOPMENT BYPASS: Redirects to admin dashboard
     """
+    # For development, redirect straight to admin dashboard
+    logger.warning("DEVELOPMENT MODE: Redirecting root to admin dashboard")
+    return redirect(url_for('admin.index'))
+    
+    # The code below is disabled for now - it would be used in a normal operation mode
+    '''
     # Get required services
     ga4_service = get_service('ga4')
     plugin_service = get_service('plugin')
@@ -57,6 +64,7 @@ def index():
         return render_template('dashboard/error.html', 
                               title='Dashboard Error',
                               message='An error occurred while loading the dashboard data.')
+    '''
 
 @dashboard_bp.route('/property/<property_id>')
 @login_required

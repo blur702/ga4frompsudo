@@ -34,20 +34,48 @@ def create_app(config_name=None):
     """
     app = Flask(__name__, instance_relative_config=False)
 
-    # Configure application logging
-    # This basicConfig sets up logging to the console.
-    # For production, more advanced logging (e.g., to files, with rotation) is recommended.
-    log_level_str = os.environ.get('LOG_LEVEL', 'INFO').upper()
-    log_level = getattr(logging, log_level_str, logging.INFO)
-    logging.basicConfig(level=log_level,
-                        format='%(asctime)s %(levelname)s %(name)s [%(module)s.%(funcName)s:%(lineno)d]: %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
-    app.logger.info("Application factory `create_app` called.")
-
-
-    # Load configuration
+    # Configure application logging using our utility function
+    # We'll import locally to avoid circular imports
+    from app.utils.logging_utils import configure_logging, log_exception
+    
+    # Determine config_name before using it
     if config_name is None:
         config_name = os.environ.get('FLASK_ENV', 'development')
+    
+    # Set up log directory structure
+    log_dir = os.path.join(os.getcwd(), 'logs')
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    
+    # Create separate log files for different log levels
+    error_log = os.path.join(log_dir, f"{config_name}_errors.log")
+    app_log = os.path.join(log_dir, f"{config_name}.log") if config_name != 'testing' else None
+    
+    # Configure logging with error-only file logging and console for all levels
+    logger = configure_logging(
+        app_name='ga4_dashboard',
+        log_level=os.environ.get('LOG_LEVEL', 'INFO'),
+        log_file=app_log,
+        log_to_console=True,
+        file_log_level='INFO',    # Log INFO and above to main log file
+        clear_log_file=True       # Clear log file on each run
+    )
+    
+    # Configure a separate error log file that collects only errors and above
+    error_handler = logging.FileHandler(error_log, 'w')  # 'w' mode to clear on startup
+    error_handler.setLevel(logging.ERROR)
+    error_format = '%(asctime)s %(levelname)s %(name)s [%(module)s.%(funcName)s:%(lineno)d]: %(message)s'
+    error_handler.setFormatter(logging.Formatter(error_format, '%Y-%m-%d %H:%M:%S'))
+    logger.addHandler(error_handler)
+    
+    # Log run separator for error log
+    run_separator = f"\n{'='*80}\nAPPLICATION START: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{'='*80}\n"
+    with open(error_log, 'a') as f:
+        f.write(run_separator)
+        
+    logger.info(f"Error logging configured to file: {error_log}")
+    
+    app.logger.info("Application factory `create_app` called.")
 
     app.logger.info(f"Attempting to load configuration: '{config_name}'")
     try:
@@ -194,38 +222,11 @@ def register_error_handlers(app):
         app (Flask): The Flask application instance.
     """
     app.logger.info("Registering custom error handlers...")
-
-    @app.errorhandler(404)
-    def page_not_found_error(error):
-        """Handles 404 Not Found errors."""
-        app.logger.warning(f"Not Found (404): {error.description if hasattr(error, 'description') else str(error)} - Path: {getattr(error, 'request_path', 'N/A')}")
-        # In a real app, you'd render a template:
-        # return render_template('errors/404.html', error=error), 404
-        return "<h3>404 - Page Not Found</h3><p>Sorry, the page you are looking for does not exist.</p>", 404
-
-    @app.errorhandler(500)
-    def internal_server_error_handler(error):
-        """Handles 500 Internal Server errors."""
-        app.logger.error(f"Internal Server Error (500): {error}", exc_info=True)  # Log the full exception
-        # return render_template('errors/500.html', error=error), 500
-        return "<h3>500 - Internal Server Error</h3><p>An unexpected error occurred on our server. We are investigating.</p>", 500
-
-    @app.errorhandler(403)
-    def forbidden_error(error):
-        """Handles 403 Forbidden errors."""
-        app.logger.warning(f"Forbidden (403): {error.description if hasattr(error, 'description') else str(error)}")
-        # return render_template('errors/403.html', error=error), 403
-        return "<h3>403 - Forbidden</h3><p>You do not have the necessary permissions to access this resource.</p>", 403
-
-    @app.errorhandler(401)
-    def unauthorized_error(error):
-        """Handles 401 Unauthorized errors."""
-        app.logger.warning(f"Unauthorized (401): {error.description if hasattr(error, 'description') else str(error)}")
-        # return render_template('errors/401.html', error=error), 401
-        # Could also redirect to login page:
-        # from flask import redirect, url_for
-        # return redirect(url_for('auth_bp.login_route_name_here')) # Example
-        return "<h3>401 - Unauthorized</h3><p>Authentication is required to access this resource. Please log in.</p>", 401
+    
+    # Use our custom error handlers from the utils module
+    from app.utils.error_handlers import register_error_handlers as register_utils_error_handlers
+    register_utils_error_handlers(app)
+    
     app.logger.info("Custom error handlers registered.")
 
 

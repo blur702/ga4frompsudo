@@ -258,3 +258,88 @@ def sanitize_input(input_str: str) -> str:
                        .replace('"', '&quot;') \
                        .replace("'", '&#x27;')  # &#39; or &#x27; for single quote
     return sanitized
+
+
+def is_valid_email(email: str) -> bool:
+    """
+    Validates an email address format using basic rules.
+    This is a simple validator - for production, consider more robust libraries.
+    
+    Args:
+        email (str): The email address to validate.
+        
+    Returns:
+        bool: True if the email format appears valid, False otherwise.
+    """
+    if not email or not isinstance(email, str):
+        return False
+        
+    # Simple validation: contains @ with text before and after, and a period in the domain
+    if '@' not in email:
+        return False
+        
+    local, domain = email.rsplit('@', 1)
+    
+    # Check local part (before @)
+    if not local or len(local) > 64:  # Local part max length per RFC
+        return False
+        
+    # Check domain part (after @)
+    if not domain or '.' not in domain:
+        return False
+        
+    # Check if domain has at least one character before and after the period
+    parts = domain.split('.')
+    if len(parts) < 2 or any(not part for part in parts):
+        return False
+        
+    # Check TLD isn't all numeric
+    if parts[-1].isdigit():
+        return False
+        
+    logger.debug(f"Email validation successful for: {email}")
+    return True
+
+
+def is_valid_password(password: str, min_length: int = 8) -> bool:
+    """
+    Validates a password against basic security requirements.
+    
+    Args:
+        password (str): The password to validate.
+        min_length (int, optional): The minimum required password length. Defaults to 8.
+        
+    Returns:
+        bool: True if the password meets all requirements, False otherwise.
+    """
+    if not password or not isinstance(password, str):
+        return False
+        
+    # Check length
+    if len(password) < min_length:
+        logger.debug(f"Password rejected: too short (length={len(password)}, min={min_length})")
+        return False
+        
+    # Check for at least one uppercase letter
+    if not any(char.isupper() for char in password):
+        logger.debug("Password rejected: missing uppercase letter")
+        return False
+        
+    # Check for at least one lowercase letter
+    if not any(char.islower() for char in password):
+        logger.debug("Password rejected: missing lowercase letter")
+        return False
+        
+    # Check for at least one digit
+    if not any(char.isdigit() for char in password):
+        logger.debug("Password rejected: missing digit")
+        return False
+        
+    # Check for at least one special character
+    special_chars = "!@#$%^&*()-_=+[]{}|;:'\",.<>/?"
+    if not any(char in special_chars for char in password):
+        logger.debug("Password rejected: missing special character")
+        return False
+        
+    logger.debug("Password validation successful")
+    return True

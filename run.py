@@ -25,11 +25,17 @@ config_name = os.environ.get('FLASK_CONFIG') or os.environ.get('FLASK_ENV') or '
 app = create_app(config_name)
 
 if __name__ == '__main__':
-    # Get host and port from environment variables for app.run(), or use defaults.
-    # These are typically for the development server.
-    # In production, a proper WSGI server (like Gunicorn or uWSGI) would be used.
-    host = os.environ.get('FLASK_RUN_HOST', '127.0.0.1')  # Default to loopback for local dev
-    port = int(os.environ.get('FLASK_RUN_PORT', 5000))
+    import argparse
+    
+    # Create the command-line argument parser
+    parser = argparse.ArgumentParser(description='Run the GA4 Analytics Dashboard')
+    parser.add_argument('--port', type=int, default=5000, help='Port to run the server on')
+    parser.add_argument('--host', type=str, default='127.0.0.1', help='Host to run the server on')
+    args = parser.parse_args()
+    
+    # Get host and port from command line args or environment variables, with command line taking precedence
+    host = args.host or os.environ.get('FLASK_RUN_HOST', '127.0.0.1')
+    port = args.port or int(os.environ.get('FLASK_RUN_PORT', 5000))
 
     # The `debug` parameter for `app.run()` enables the Werkzeug debugger and reloader.
     # It's good practice to let the app's configuration (`app.config['DEBUG']`)

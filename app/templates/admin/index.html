@@ -1,0 +1,47 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Admin Dashboard</h1>
+    
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">GA4 Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Configure Google Analytics 4 API credentials</p>
+                    <a href="{{ url_for('admin.ga4_config') }}" class="btn btn-primary">Configure GA4</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">User Management</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Manage user accounts and permissions</p>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-primary">Manage Users</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">System Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">View system and application information</p>
+                    <a href="{{ url_for('admin.system_info') }}" class="btn btn-primary">View Info</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

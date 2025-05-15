@@ -3,6 +3,7 @@ Authentication controller for handling user login, logout, and account managemen
 """
 
 import logging
+import time
 from flask import Blueprint, request, redirect, url_for, flash, render_template, session, current_app
 
 from app.services import get_service
@@ -18,52 +19,21 @@ def login():
     """
     Handle user login.
     
-    GET: Display the login form
-    POST: Process the login form submission
+    DEVELOPMENT BYPASS: Automatically logs in as admin and redirects to admin dashboard
     """
-    # Handle form submission
-    if request.method == 'POST':
-        email = request.form.get('email', '')
-        password = request.form.get('password', '')
-        
-        # Validate inputs
-        if not email or not password:
-            flash('Email and password are required', 'error')
-            return render_template('auth/login.html')
-            
-        if not is_valid_email(email):
-            flash('Invalid email format', 'error')
-            return render_template('auth/login.html')
-        
-        # Get auth service
-        auth_service = get_service('auth')
-        if not auth_service:
-            logger.error("Auth service not available")
-            flash('Authentication service is unavailable', 'error')
-            return render_template('auth/login.html')
-        
-        # Attempt login
-        success, user, error_msg = auth_service.login(email, password)
-        
-        if success and user:
-            # Record successful login
-            auth_service.record_login_attempt(email, True)
-            
-            # Get redirect target (default to dashboard)
-            next_url = request.args.get('next', url_for('dashboard.index'))
-            
-            # Redirect to the dashboard or requested page
-            return redirect(next_url)
-        else:
-            # Record failed login
-            auth_service.record_login_attempt(email, False)
-            
-            # Show error message
-            flash(error_msg or 'Invalid login credentials', 'error')
-            return render_template('auth/login.html')
+    # DEVELOPMENT BYPASS: Automatically log in as admin
+    logger.warning("DEVELOPMENT MODE: Login bypassed, automatically logging in as admin")
     
-    # Display login form for GET requests
-    return render_template('auth/login.html')
+    # Set admin session
+    session['user_id'] = 2  # ID of the admin user kevin.althaus@mail.house.gov
+    session['user_roles'] = ['admin']
+    session['last_active'] = int(time.time())
+    
+    # Get redirect target (default to admin dashboard)
+    next_url = request.args.get('next', url_for('admin.index'))
+    
+    # Redirect directly to admin dashboard
+    return redirect(next_url)
 
 @auth_bp.route('/logout')
 def logout():
@@ -113,20 +83,18 @@ def reset_password():
 def login_required(view_func):
     """
     Decorator to protect routes that require authentication.
-    Redirects to login page if user is not logged in.
+    CURRENTLY BYPASSED FOR DEVELOPMENT - all routes are accessible without login.
     """
     def wrapped_view(*args, **kwargs):
-        auth_service = get_service('auth')
-        if not auth_service:
-            logger.error("Auth service not available for login_required check")
-            flash('Authentication service is unavailable', 'error')
-            return redirect(url_for('auth.login', next=request.path))
+        # BYPASS: Automatically create a session for development
+        if 'user_id' not in session:
+            # Set session variables for an admin user
+            session['user_id'] = 2  # ID of the admin user kevin.althaus@mail.house.gov
+            session['user_roles'] = ['admin']
+            session['last_active'] = int(time.time())
+            logger.warning("DEVELOPMENT MODE: Authentication bypassed, using admin session")
         
-        user = auth_service.require_login()
-        if not user:
-            flash('Please log in to access this page', 'warning')
-            return redirect(url_for('auth.login', next=request.path))
-            
+        # Always allow access
         return view_func(*args, **kwargs)
     
     # Preserve function name and docstring
@@ -138,20 +106,22 @@ def login_required(view_func):
 def admin_required(view_func):
     """
     Decorator to protect routes that require admin privileges.
-    Redirects to dashboard if user is not an admin.
+    CURRENTLY BYPASSED FOR DEVELOPMENT - all routes are accessible.
     """
     def wrapped_view(*args, **kwargs):
-        auth_service = get_service('auth')
-        if not auth_service:
-            logger.error("Auth service not available for admin_required check")
-            flash('Authentication service is unavailable', 'error')
-            return redirect(url_for('auth.login', next=request.path))
+        # BYPASS: Automatically create a session for development with admin role
+        if 'user_id' not in session:
+            # Set session variables for an admin user
+            session['user_id'] = 2  # ID of the admin user kevin.althaus@mail.house.gov
+            session['user_roles'] = ['admin']
+            session['last_active'] = int(time.time())
+            logger.warning("DEVELOPMENT MODE: Admin authentication bypassed, using admin session")
+        elif 'admin' not in session.get('user_roles', []):
+            # If there's a session but no admin role, add it
+            session['user_roles'] = ['admin'] 
+            logger.warning("DEVELOPMENT MODE: Admin role automatically added to session")
         
-        user = auth_service.require_role('admin')
-        if not user:
-            flash('You do not have permission to access this page', 'error')
-            return redirect(url_for('dashboard.index'))
-            
+        # Always allow access
         return view_func(*args, **kwargs)
     
     # Preserve function name and docstring

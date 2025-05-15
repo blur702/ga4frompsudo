@@ -16,6 +16,9 @@ class Config:
 
     # Default database path, can be overridden by specific configs or environment variables
     DATABASE_PATH = os.environ.get('DATABASE_PATH') or os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'ga4_dashboard.db')
+    
+    # GA4 credentials path
+    GA4_CREDENTIALS_PATH = os.environ.get('GA4_CREDENTIALS_PATH') or os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'credentials', 'ga4_credentials.json')
 
     # Google OAuth Configuration
     AUTH = {

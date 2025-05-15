@@ -20,9 +20,16 @@ from flask import Flask
 # Import functions and classes from date_utils.py
 from .date_utils import (
     parse_date_range,
-    format_date_for_ga4,
+    date_range_to_ga4_api_format,
     get_date_periods,
     format_date_for_display
+)
+
+# Import functions from logging_utils.py
+from .logging_utils import (
+    configure_logging,
+    log_exception,
+    create_audit_log
 )
 
 # Import functions from security_utils.py
@@ -65,7 +72,7 @@ from .formatters import (
 __all__ = [
     # From date_utils
     'parse_date_range',
-    'format_date_for_ga4',
+    'date_range_to_ga4_api_format',
     'get_date_periods',
     'format_date_for_display',
     
@@ -98,6 +105,11 @@ __all__ = [
     'data_to_csv',
     'data_to_json',
     'format_ga4_report_data',
+    
+    # From logging_utils
+    'configure_logging',
+    'log_exception',
+    'create_audit_log',
     
     # Initialization
     'init_utils'

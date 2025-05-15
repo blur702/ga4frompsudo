@@ -29,6 +29,7 @@ def init_controllers(app: Flask) -> None:
     from app.controllers.dashboard_controller import dashboard_bp
     from app.controllers.reports_controller import reports_bp
     from app.controllers.api_controller import api_bp
+    from app.controllers.admin_controller import admin_bp
     
     # Register blueprints
     app.register_blueprint(auth_bp)
@@ -46,6 +47,10 @@ def init_controllers(app: Flask) -> None:
     app.register_blueprint(api_bp, url_prefix='/api')
     _blueprints['api'] = api_bp
     logger.info("Registered API blueprint")
+    
+    app.register_blueprint(admin_bp)
+    _blueprints['admin'] = admin_bp
+    logger.info("Registered admin blueprint")
     
     logger.info("All controllers initialized successfully")
 

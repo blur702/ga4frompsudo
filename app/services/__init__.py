@@ -32,16 +32,18 @@ def init_services(app: Flask) -> None:
     logger.info("Initializing application services...")
     
     # Initialize the security service first as other services depend on it
-    security_service = SecurityService(
-        key_file_path=app.config.get('ENCRYPTION_KEY_PATH'),
-        salt=app.config.get('PASSWORD_SALT', 'default_salt_change_me')
-    )
+    security_config = {
+        'key_path': app.config.get('SECURITY', {}).get('key_path') or os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..', 'security', 'encryption_app.key'),
+        'password_iterations': 310000
+    }
+    security_service = SecurityService(security_config)
     _services['security'] = security_service
     logger.info("Security service initialized")
     
     # Initialize authentication service
-    auth_service = AuthService(security_service)
+    auth_service = AuthService(security_service, app.database)
     _services['auth'] = auth_service
+    logger.debug(f"Authentication service initialized with database: {app.database}")
     logger.info("Authentication service initialized")
     
     # Initialize GA4 service if credentials are available

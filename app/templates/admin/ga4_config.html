@@ -1,0 +1,280 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}GA4 Configuration{% endblock %}
+
+{% block styles %}
+<style>
+    .nav-tabs .nav-item .nav-link {
+        border: 1px solid #dee2e6;
+        border-bottom: none;
+        border-radius: 0.25rem 0.25rem 0 0;
+        padding: 0.5rem 1rem;
+        margin-right: 0.25rem;
+    }
+    .nav-tabs .nav-item .nav-link.active {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    .tab-content {
+        border: 1px solid #dee2e6;
+        border-top: none;
+        padding: 1.5rem;
+        background-color: #f8f9fa;
+        border-radius: 0 0 0.25rem 0.25rem;
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .required:after {
+        content: " *";
+        color: red;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>GA4 Configuration</h1>
+        <a href="{{ url_for('admin.index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Admin
+        </a>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">Google Analytics 4 API Credentials</h5>
+        </div>
+        <div class="card-body">
+            {% if credentials_exist %}
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i> GA4 credentials are configured and ready to use.
+                {% if existing_credentials %}
+                <hr>
+                <h6>Current Configuration:</h6>
+                <ul>
+                    <li><strong>Project ID:</strong> {{ existing_credentials.get('project_id', 'Not specified') }}</li>
+                    <li><strong>Client Email:</strong> {{ existing_credentials.get('client_email', 'Not specified') }}</li>
+                </ul>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-circle me-2"></i> GA4 credentials are not yet configured. Please set up your credentials using one of the methods below.
+            </div>
+            {% endif %}
+            
+            <ul class="nav nav-tabs mb-3" id="credentialsTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="json-tab" data-bs-toggle="tab" data-bs-target="#json" type="button" role="tab" aria-controls="json" aria-selected="true">
+                        <i class="fas fa-code me-2"></i>JSON
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="form-tab" data-bs-toggle="tab" data-bs-target="#form" type="button" role="tab" aria-controls="form" aria-selected="false">
+                        <i class="fas fa-list-alt me-2"></i>Form Fields
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="file-tab" data-bs-toggle="tab" data-bs-target="#file" type="button" role="tab" aria-controls="file" aria-selected="false">
+                        <i class="fas fa-file-upload me-2"></i>Upload File
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="credentialsTabsContent">
+                <!-- JSON Input Tab -->
+                <div class="tab-pane fade show active" id="json" role="tabpanel" aria-labelledby="json-tab">
+                    <form method="post" action="{{ url_for('admin.ga4_config') }}">
+                        <input type="hidden" name="submission_method" value="json">
+                        
+                        <div class="form-group mb-3">
+                            <label for="credentials_json" class="form-label required">GA4 Credentials JSON</label>
+                            <textarea class="form-control" id="credentials_json" name="credentials_json" rows="12" placeholder="Paste your GA4 service account credentials JSON here"></textarea>
+                            <small class="form-text text-muted">
+                                This should be the contents of your Google service account credentials JSON file.
+                            </small>
+                        </div>
+                        
+                        <div class="form-group d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Credentials
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Form Fields Tab -->
+                <div class="tab-pane fade" id="form" role="tabpanel" aria-labelledby="form-tab">
+                    <form method="post" action="{{ url_for('admin.ga4_config') }}">
+                        <input type="hidden" name="submission_method" value="fields">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="project_id" class="form-label required">Project ID</label>
+                                <input type="text" class="form-control" id="project_id" name="project_id" placeholder="my-ga4-project-id" value="{{ existing_credentials.get('project_id', '') }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="type" class="form-label">Type</label>
+                                <input type="text" class="form-control" id="type" name="type" value="service_account" readonly>
+                                <small class="form-text text-muted">This value is fixed for GA4 service accounts.</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="client_email" class="form-label required">Client Email</label>
+                                <input type="email" class="form-control" id="client_email" name="client_email" placeholder="service-account@project-id.iam.gserviceaccount.com" value="{{ existing_credentials.get('client_email', '') }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="client_id" class="form-label required">Client ID</label>
+                                <input type="text" class="form-control" id="client_id" name="client_id" placeholder="123456789012345678901" value="{{ existing_credentials.get('client_id', '') }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="private_key_id" class="form-label required">Private Key ID</label>
+                                <input type="text" class="form-control" id="private_key_id" name="private_key_id" placeholder="a1b2c3d4e5f6g7h8i9j0..." value="{{ existing_credentials.get('private_key_id', '') }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="client_x509_cert_url" class="form-label">Client X509 Cert URL</label>
+                                <input type="text" class="form-control" id="client_x509_cert_url" name="client_x509_cert_url" placeholder="https://www.googleapis.com/robot/v1/metadata/x509/..." value="{{ existing_credentials.get('client_x509_cert_url', '') }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="private_key" class="form-label required">Private Key</label>
+                            <textarea class="form-control" id="private_key" name="private_key" rows="5" placeholder="-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFA...
+-----END PRIVATE KEY-----"></textarea>
+                            <small class="form-text text-muted">The private key from your service account credentials, including the BEGIN and END lines.</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="show_advanced" onclick="toggleAdvancedFields()">
+                                <label class="form-check-label" for="show_advanced">
+                                    Show Advanced Fields
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="advanced_fields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="auth_uri" class="form-label">Auth URI</label>
+                                    <input type="text" class="form-control" id="auth_uri" name="auth_uri" value="https://accounts.google.com/o/oauth2/auth">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="token_uri" class="form-label">Token URI</label>
+                                    <input type="text" class="form-control" id="token_uri" name="token_uri" value="https://oauth2.googleapis.com/token">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="auth_provider_x509_cert_url" class="form-label">Auth Provider X509 Cert URL</label>
+                                    <input type="text" class="form-control" id="auth_provider_x509_cert_url" name="auth_provider_x509_cert_url" value="https://www.googleapis.com/oauth2/v1/certs">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="universe_domain" class="form-label">Universe Domain</label>
+                                    <input type="text" class="form-control" id="universe_domain" name="universe_domain" value="googleapis.com">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Credentials
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- File Upload Tab -->
+                <div class="tab-pane fade" id="file" role="tabpanel" aria-labelledby="file-tab">
+                    <form method="post" action="{{ url_for('admin.ga4_config') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="submission_method" value="file">
+                        
+                        <div class="form-group mb-3">
+                            <label for="credentials_file" class="form-label required">GA4 Credentials JSON File</label>
+                            <input type="file" class="form-control" id="credentials_file" name="credentials_file" accept=".json">
+                            <small class="form-text text-muted">
+                                Upload the JSON key file downloaded from the Google Cloud Console.
+                            </small>
+                        </div>
+                        
+                        <div class="form-group d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload me-2"></i>Upload & Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-info-circle me-2"></i>How to Get GA4 Credentials
+            </h5>
+        </div>
+        <div class="card-body">
+            <ol class="mb-0">
+                <li class="mb-2">Go to the <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
+                <li class="mb-2">Create a new project or select an existing one</li>
+                <li class="mb-2">Enable the Google Analytics Data API and Google Analytics Admin API:
+                    <ul>
+                        <li>Navigate to "APIs & Services" > "Library"</li>
+                        <li>Search for "Google Analytics Data API" and enable it</li>
+                        <li>Search for "Google Analytics Admin API" and enable it</li>
+                    </ul>
+                </li>
+                <li class="mb-2">Create a service account:
+                    <ul>
+                        <li>Navigate to "IAM & Admin" > "Service Accounts"</li>
+                        <li>Click "Create Service Account"</li>
+                        <li>Enter a name and description for the service account</li>
+                        <li>Click "Create and Continue"</li>
+                    </ul>
+                </li>
+                <li class="mb-2">Create a JSON key for the service account:
+                    <ul>
+                        <li>Once the service account is created, click on it</li>
+                        <li>Go to the "Keys" tab</li>
+                        <li>Click "Add Key" > "Create new key"</li>
+                        <li>Select "JSON" as the key type and click "Create"</li>
+                        <li>The JSON key file will be downloaded to your computer</li>
+                    </ul>
+                </li>
+                <li class="mb-2">Give the service account access to your Google Analytics properties:
+                    <ul>
+                        <li>Go to <a href="https://analytics.google.com/" target="_blank">Google Analytics</a></li>
+                        <li>Navigate to Admin > Account Access Management</li>
+                        <li>Add the service account email (found in the JSON file) with appropriate permissions</li>
+                    </ul>
+                </li>
+                <li>Use the downloaded JSON file to configure GA4 credentials in this application</li>
+            </ol>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleAdvancedFields() {
+        var advancedFields = document.getElementById('advanced_fields');
+        var checkbox = document.getElementById('show_advanced');
+        
+        if (checkbox.checked) {
+            advancedFields.style.display = 'block';
+        } else {
+            advancedFields.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}
