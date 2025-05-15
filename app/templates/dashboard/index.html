@@ -1,0 +1,209 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Dashboard - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">Analytics Dashboard</h1>
+        <p class="lead text-muted">Welcome to the GA4 Analytics Dashboard</p>
+    </div>
+    <div class="col-auto">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('reports.new_report') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> New Report
+            </a>
+            <button type="button" class="btn btn-outline-secondary" id="refreshDashboard">
+                <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card border-left-primary shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Properties
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ properties|length }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-building fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card border-left-success shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Active Users Now
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ active_users.values()|sum if active_users else 0 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card border-left-info shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Plugins Available
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ '1' if engagement_plugin else '0' }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-puzzle-piece fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card border-left-warning shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Reports
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <!-- Placeholder value -->
+                            0
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Properties Overview</h6>
+            </div>
+            <div class="card-body">
+                {% if properties %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>ID</th>
+                                <th>Active Users</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for property in properties %}
+                            {% set property_id = property.name.split('/')[-1] %}
+                            <tr>
+                                <td>{{ property.displayName }}</td>
+                                <td>{{ property_id }}</td>
+                                <td>
+                                    <span class="badge bg-success rounded-pill">
+                                        {{ active_users.get(property_id, 0) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('dashboard.property_dashboard', property_id=property_id) }}" class="btn btn-outline-primary">
+                                            <i class="fas fa-chart-bar me-1"></i> View
+                                        </a>
+                                        <a href="{{ url_for('reports.new_report') }}?property_id={{ property_id }}" class="btn btn-outline-success">
+                                            <i class="fas fa-file-alt me-1"></i> Report
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-exclamation-circle text-warning fa-3x mb-3"></i>
+                    <h5>No GA4 Properties Available</h5>
+                    <p class="text-muted">
+                        No Google Analytics 4 properties were found for your account.
+                        Please ensure your GA4 credentials are correctly configured.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{{ url_for('reports.new_report') }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Create New Report</h5>
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <p class="mb-1">Generate a new analytics report from GA4 data.</p>
+                    </a>
+                    <a href="{{ url_for('dashboard.analytics') }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">View Analytics</h5>
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <p class="mb-1">Explore detailed analytics across all properties.</p>
+                    </a>
+                    <a href="{{ url_for('dashboard.plugins') }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Manage Plugins</h5>
+                            <i class="fas fa-puzzle-piece"></i>
+                        </div>
+                        <p class="mb-1">View and configure available analytics plugins.</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle dashboard refresh button
+        const refreshButton = document.getElementById('refreshDashboard');
+        if (refreshButton) {
+            refreshButton.addEventListener('click', function() {
+                location.reload();
+            });
+        }
+    });
+</script>
+{% endblock %}

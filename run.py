@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+"""
+Run script for GA4 Analytics Dashboard.
+This script initializes and runs the Flask development server.
+It loads environment variables from a .env file (if present)
+and uses the application factory `create_app` from the `app` package.
+"""
+
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file at the very beginning.
+# This ensures that any environment variables used by Flask or extensions
+# during initialization are already set.
+load_dotenv()
+
+from app import create_app  # Import the application factory
+
+# Determine the configuration name from environment variables.
+# Common choices are FLASK_CONFIG or FLASK_ENV.
+# Fallback to 'development' if not set.
+config_name = os.environ.get('FLASK_CONFIG') or os.environ.get('FLASK_ENV') or 'development'
+
+# Create the Flask app instance using the factory and the determined configuration.
+app = create_app(config_name)
+
+if __name__ == '__main__':
+    # Get host and port from environment variables for app.run(), or use defaults.
+    # These are typically for the development server.
+    # In production, a proper WSGI server (like Gunicorn or uWSGI) would be used.
+    host = os.environ.get('FLASK_RUN_HOST', '127.0.0.1')  # Default to loopback for local dev
+    port = int(os.environ.get('FLASK_RUN_PORT', 5000))
+
+    # The `debug` parameter for `app.run()` enables the Werkzeug debugger and reloader.
+    # It's good practice to let the app's configuration (`app.config['DEBUG']`)
+    # determine if debug mode should be active.
+    # Flask's `app.run()` will use `app.debug` by default if `debug` is not explicitly passed.
+    # Explicitly passing `app.debug` makes the intent clear.
+
+    app.logger.info(f"Starting GA4 Analytics Dashboard application on http://{host}:{port}")
+    app.logger.info(f"Application debug mode is: {app.debug}")
+
+    # Run the Flask development server.
+    # For production, use a WSGI server like Gunicorn:
+    # Example: gunicorn --bind 0.0.0.0:5000 "run:app"
+    app.run(host=host, port=port, debug=app.debug)

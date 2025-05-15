@@ -1,0 +1,57 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Environment variables
+.env
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# Flask related
+instance/
+.webassets-cache
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Security files
+security/
+keys/*
+!keys/README.md
+*.key
+*.pem
+*.json.secret
+ga4-service-account.json
+credentials.json
+
+# Generated reports
+reports/
+*.pdf
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/

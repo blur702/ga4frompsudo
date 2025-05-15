@@ -1,0 +1,245 @@
+"""
+Date related utility functions.
+Provides helpers for parsing date range strings, formatting dates for
+Google Analytics 4 API calls, and generating sequences of date periods.
+"""
+
+import datetime
+import logging
+from typing import Dict, List, Tuple, Union  # For type hinting
+
+logger = logging.getLogger(__name__)
+
+def parse_date_range(date_range_str: str, default_days: int = 30) -> Dict[str, str]:
+    """
+    Parses a date range string into start and end dates in 'YYYY-MM-DD' format.
+
+    Supported `date_range_str` formats:
+        - 'today': Current day.
+        - 'yesterday': Previous day.
+        - 'last-7-days': The last 7 full days including today.
+        - 'last-30-days': The last 30 full days including today.
+        - 'last-90-days': The last 90 full days including today.
+        - 'YYYY-MM-DD,YYYY-MM-DD': A custom date range (start_date,end_date).
+
+    Args:
+        date_range_str (str): The date range string to parse.
+        default_days (int): Number of days to use for the default range if parsing fails
+                            or an invalid/unsupported string is provided. Defaults to 30.
+
+    Returns:
+        Dict[str, str]: A dictionary with 'startDate' and 'endDate' keys,
+                        with values in 'YYYY-MM-DD' string format.
+    """
+    today = datetime.date.today()
+    start_date: datetime.date
+    end_date: datetime.date  # type: ignore
+
+    logger.debug(f"Parsing date range string: '{date_range_str}'")
+
+    if date_range_str == 'today':
+        start_date = today
+        end_date = today
+    elif date_range_str == 'yesterday':
+        start_date = today - datetime.timedelta(days=1)
+        end_date = today - datetime.timedelta(days=1)
+    elif date_range_str == 'last-7-days':
+        end_date = today
+        start_date = end_date - datetime.timedelta(days=6)  # Includes today as the 7th day
+    elif date_range_str == 'last-30-days':
+        end_date = today
+        start_date = end_date - datetime.timedelta(days=29)
+    elif date_range_str == 'last-90-days':
+        end_date = today
+        start_date = end_date - datetime.timedelta(days=89)
+    elif ',' in date_range_str:
+        try:
+            start_date_str, end_date_str = date_range_str.split(',')
+            start_date = datetime.datetime.strptime(start_date_str.strip(), '%Y-%m-%d').date()
+            end_date = datetime.datetime.strptime(end_date_str.strip(), '%Y-%m-%d').date()
+            if start_date > end_date:  # Ensure start_date is not after end_date
+                logger.warning(f"Custom date range has start_date after end_date. Swapping: {start_date_str}, {end_date_str}")
+                start_date, end_date = end_date, start_date
+        except ValueError:
+            logger.warning(f"Invalid custom date range format: '{date_range_str}'. Using default range.")
+            end_date = today
+            start_date = end_date - datetime.timedelta(days=default_days - 1)
+    else:
+        logger.warning(f"Unsupported date range string: '{date_range_str}'. Using default range.")
+        end_date = today
+        start_date = end_date - datetime.timedelta(days=default_days - 1)
+
+    return {
+        'startDate': start_date.strftime('%Y-%m-%d'),
+        'endDate': end_date.strftime('%Y-%m-%d')
+    }
+
+def date_range_to_ga4_api_format(start_date_str: str, end_date_str: str) -> Dict[str, str]:
+    """
+    Converts start and end date strings ('YYYY-MM-DD') to a format suitable for the GA4 Data API.
+    The GA4 Data API can accept 'YYYY-MM-DD', 'today', or 'yesterday', or 'NdaysAgo'.
+
+    Note: This function currently only directly passes YYYY-MM-DD or uses keywords.
+    It could be expanded to convert specific YYYY-MM-DD to NdaysAgo if beneficial.
+
+    Args:
+        start_date_str (str): The start date in 'YYYY-MM-DD' format.
+        end_date_str (str): The end date in 'YYYY-MM-DD' format.
+
+    Returns:
+        Dict[str, str]: A dictionary with 'startDate' and 'endDate' keys,
+                        formatted for the GA4 API.
+    """
+    today = datetime.date.today()
+    yesterday = today - datetime.timedelta(days=1)
+
+    # Convert start_date_str
+    try:
+        s_date_obj = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        if s_date_obj == today:
+            ga4_start_date = 'today'
+        elif s_date_obj == yesterday:
+            ga4_start_date = 'yesterday'
+        # Example for NdaysAgo:
+        # elif s_date_obj == (today - datetime.timedelta(days=7)):
+        #     ga4_start_date = '7daysAgo'
+        else:
+            ga4_start_date = start_date_str
+    except ValueError:
+        logger.error(f"Invalid start_date_str format: {start_date_str}. Expected YYYY-MM-DD.")
+        # Fallback or raise error - for now, assume valid input from parse_date_range
+        ga4_start_date = start_date_str
+
+    # Convert end_date_str
+    try:
+        e_date_obj = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        if e_date_obj == today:
+            ga4_end_date = 'today'
+        elif e_date_obj == yesterday:
+            ga4_end_date = 'yesterday'
+        else:
+            ga4_end_date = end_date_str
+    except ValueError:
+        logger.error(f"Invalid end_date_str format: {end_date_str}. Expected YYYY-MM-DD.")
+        ga4_end_date = end_date_str
+
+    logger.debug(f"Converted date range for GA4 API: startDate='{ga4_start_date}', endDate='{ga4_end_date}'")
+    return {
+        'startDate': ga4_start_date,
+        'endDate': ga4_end_date
+    }
+
+def get_date_periods(start_date_str: str, end_date_str: str, period: str = 'day') -> List[Union[str, Tuple[str, str]]]:
+    """
+    Generates a list of date periods (days, weeks, or months) between a start and end date.
+
+    Args:
+        start_date_str (str): The start date in 'YYYY-MM-DD' format.
+        end_date_str (str): The end date in 'YYYY-MM-DD' format.
+        period (str, optional): The type of period to generate ('day', 'week', 'month').
+                                Defaults to 'day'.
+
+    Returns:
+        List[Union[str, Tuple[str, str]]]:
+            - If period is 'day': A list of date strings ('YYYY-MM-DD').
+            - If period is 'week' or 'month': A list of tuples, where each tuple
+              contains the start and end date strings of that period.
+            Returns an empty list if dates are invalid or period is unsupported.
+    """
+    try:
+        start_date_obj = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        end_date_obj = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        logger.error(f"Invalid date format for get_date_periods. Start: '{start_date_str}', End: '{end_date_str}'")
+        return []
+
+    if start_date_obj > end_date_obj:
+        logger.warning(f"Start date ({start_date_str}) is after end date ({end_date_str}) in get_date_periods. Returning empty list.")
+        return []
+
+    results: List[Union[str, Tuple[str, str]]] = []
+    current_date = start_date_obj
+
+    if period == 'day':
+        while current_date <= end_date_obj:
+            results.append(current_date.strftime('%Y-%m-%d'))
+            current_date += datetime.timedelta(days=1)
+    elif period == 'week':
+        # Start from the beginning of the week (Monday for ISO standard week)
+        current_week_start = start_date_obj - datetime.timedelta(days=start_date_obj.weekday())
+        while current_week_start <= end_date_obj:
+            # Ensure the week start is not before the overall start_date if it matters for partial first week
+            actual_period_start = max(current_week_start, start_date_obj)
+
+            current_week_end = current_week_start + datetime.timedelta(days=6)
+            actual_period_end = min(current_week_end, end_date_obj)
+
+            results.append((actual_period_start.strftime('%Y-%m-%d'), actual_period_end.strftime('%Y-%m-%d')))
+
+            current_week_start += datetime.timedelta(weeks=1)
+            if actual_period_end == end_date_obj:  # Ensure we don't create a week starting after the overall end date was reached
+                break
+    elif period == 'month':
+        current_month_start = start_date_obj.replace(day=1)
+        while current_month_start <= end_date_obj:
+            actual_period_start = max(current_month_start, start_date_obj)
+
+            # Find the end of the current month
+            next_month = current_month_start.month + 1
+            next_year = current_month_start.year
+            if next_month > 12:
+                next_month = 1
+                next_year += 1
+            end_of_current_month = datetime.date(next_year, next_month, 1) - datetime.timedelta(days=1)
+
+            actual_period_end = min(end_of_current_month, end_date_obj)
+
+            results.append((actual_period_start.strftime('%Y-%m-%d'), actual_period_end.strftime('%Y-%m-%d')))
+
+            # Move to the start of the next month
+            current_month_start = datetime.date(next_year, next_month, 1)
+            if actual_period_end == end_date_obj:  # Ensure we don't create a month starting after overall end date was reached
+                break
+    else:
+        logger.warning(f"Unsupported period type: '{period}'. Supported types are 'day', 'week', 'month'.")
+
+    logger.debug(f"Generated {len(results)} periods of type '{period}' for range {start_date_str} to {end_date_str}.")
+    return results
+
+def format_date_for_display(date_obj: Union[datetime.date, datetime.datetime, str],
+                            output_format: str = "%B %d, %Y") -> str:
+    """
+    Formats a date (or datetime object or date string) into a human-readable string.
+
+    Args:
+        date_obj (Union[datetime.date, datetime.datetime, str]): The date or datetime object,
+            or a string in 'YYYY-MM-DD' or ISO 8601 datetime format.
+        output_format (str, optional): The desired output format string (strftime codes).
+                                       Defaults to "%B %d, %Y" (e.g., "May 13, 2025").
+
+    Returns:
+        str: The formatted date string, or the original input if it cannot be parsed.
+    """
+    if isinstance(date_obj, str):
+        try:
+            # Attempt to parse as datetime first (more inclusive)
+            parsed_date = datetime.datetime.fromisoformat(date_obj.replace('Z', '+00:00'))
+        except ValueError:
+            try:
+                # Attempt to parse as date only
+                parsed_date = datetime.datetime.strptime(date_obj, '%Y-%m-%d')
+            except ValueError:
+                logger.warning(f"Could not parse date string for display: '{date_obj}'")
+                return date_obj  # Return original string if parsing fails
+        date_to_format = parsed_date
+    elif isinstance(date_obj, (datetime.datetime, datetime.date)):
+        date_to_format = date_obj
+    else:
+        logger.warning(f"Invalid type for date_obj in format_date_for_display: {type(date_obj)}")
+        return str(date_obj)  # Fallback for unexpected types
+
+    try:
+        return date_to_format.strftime(output_format)
+    except AttributeError:  # If date_to_format ended up being None after parsing attempts
+        logger.warning(f"Could not format date object for display: {date_to_format}")
+        return str(date_obj)
