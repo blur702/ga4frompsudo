@@ -1,6 +1,7 @@
 import logging
 import secrets
 import time
+import base64
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, Tuple, List
 
@@ -21,8 +22,9 @@ class AuthService:
     - Permission checking based on user roles
     - Session renewal and timeout management
     """
-    def __init__(self, security_service: SecurityService):
+    def __init__(self, security_service: SecurityService, database):
         self.security_service = security_service
+        self.database = database
         self.session_duration = current_app.config.get('SESSION_DURATION', 3600)  # Default: 1 hour
         self.token_expiry = current_app.config.get('TOKEN_EXPIRY', 86400)  # Default: 24 hours
 
@@ -42,8 +44,8 @@ class AuthService:
         """
         logger.debug(f"Login attempt for email: {email}")
         
-        # Find user by email
-        user = User.find_by_email(email)
+        # Find user by email using database instance
+        user = User.find_by_email(self.database, email)
         if not user:
             logger.warning(f"Login failed: No user found with email {email}")
             return False, None, "Invalid email or password"
@@ -53,9 +55,30 @@ class AuthService:
             logger.warning(f"Login failed: User {email} is inactive")
             return False, None, "Account is inactive. Please contact an administrator."
         
-        # Verify password
-        if not self.security_service.verify_password(password, user.password_hash):
-            logger.warning(f"Login failed: Invalid password for {email}")
+        # Special case for admin - bypass password verification
+        if 'admin' in user.roles:
+            logger.info(f"Admin user {email} logged in with passwordless authentication")
+            return True, user, None
+            
+        # Verify password for non-admin users
+        # Check if password_hash is in the new format (hash:salt)
+        if ':' in user.password_hash:
+            # Split the combined hash:salt string
+            hash_part, salt_part = user.password_hash.split(':', 1)
+            # Decode from base64
+            try:
+                stored_hash = base64.b64decode(hash_part)
+                salt = base64.b64decode(salt_part)
+                # Verify using the security service
+                if not self.security_service.verify_password(password, stored_hash, salt):
+                    logger.warning(f"Login failed: Invalid password for {email}")
+                    return False, None, "Invalid email or password"
+            except Exception as e:
+                logger.error(f"Error during password verification: {e}")
+                return False, None, "Authentication error occurred"
+        else:
+            # Legacy format or invalid format
+            logger.warning(f"Login failed: Invalid password hash format for {email}")
             return False, None, "Invalid email or password"
         
         # Create session
@@ -92,7 +115,8 @@ class AuthService:
         # Update last active time
         session['last_active'] = current_time
         
-        return User.find_by_id(user_id)
+        # Use database instance to find user by ID
+        return User.find_by_id(self.database, user_id)
 
     def require_login(self) -> Optional[User]:
         """
@@ -208,6 +232,7 @@ class AuthService:
         # Set session data
         session.clear()
         session['user_id'] = user.id
+        session['user_roles'] = user.roles
         session['last_active'] = int(time.time())
         
         # Set session cookie options from config
@@ -217,7 +242,7 @@ class AuthService:
         # Generate CSRF token for additional security
         session['csrf_token'] = secrets.token_hex(16)
         
-        logger.debug(f"Created new session for user_id {user.id}")
+        logger.debug(f"Created new session for user_id {user.id} with roles {user.roles}")
 
     def check_csrf_token(self, token: str) -> bool:
         """

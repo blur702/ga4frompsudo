@@ -22,53 +22,104 @@ class User(BaseModel):
         updated_at: When the user was last updated
         last_login: When the user last logged in
     """
-    table_name = 'users'
     
-    def __init__(self, id: Optional[int] = None, email: str = '', password_hash: str = '',
-                 first_name: str = '', last_name: str = '', roles: List[str] = None,
-                 is_active: bool = True, created_at: Optional[datetime] = None,
-                 updated_at: Optional[datetime] = None, last_login: Optional[datetime] = None):
+    @property
+    def TABLE_NAME(self):
+        return 'users'
+    
+    def __init__(self, database, id_val=None, email='', password_hash='',
+                 first_name='', last_name='', roles=None,
+                 is_active=True, created_at=None, updated_at=None, last_login=None):
         """Initialize a new User instance."""
-        super().__init__(id, created_at, updated_at)
+        super().__init__(database, id_val)
         self.email = email
         self.password_hash = password_hash
         self.first_name = first_name
         self.last_name = last_name
         self.roles = roles or ['user']
         self.is_active = is_active
+        self.created_at = created_at
+        self.updated_at = updated_at
         self.last_login = last_login
     
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'User':
+    def _to_dict(self):
         """
-        Create a User instance from a dictionary.
+        Convert User instance to a dictionary for database operations.
+        Excludes id field which is handled by BaseModel.
+        
+        Returns:
+            Dictionary representation of the user
+        """
+        # Convert roles list to comma-separated string for DB storage
+        roles_str = ','.join(self.roles) if self.roles else 'user'
+        
+        data = {
+            'email': self.email,
+            'password_hash': self.password_hash,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'roles': roles_str,
+            'is_active': 1 if self.is_active else 0
+        }
+        
+        # Handle datetime fields
+        if self.created_at:
+            data['created_at'] = self._datetime_to_iso(self.created_at)
+        if self.updated_at:
+            data['updated_at'] = self._datetime_to_iso(self.updated_at)
+        if self.last_login:
+            data['last_login'] = self._datetime_to_iso(self.last_login)
+            
+        return data
+    
+    @classmethod
+    def _from_db_row(cls, row_dict, database_instance):
+        """
+        Creates a User instance from a database row.
         
         Args:
-            data: Dictionary containing user data
+            row_dict: Dictionary containing row data
+            database_instance: Database instance to associate with the model
             
         Returns:
             User instance
         """
-        roles = data.get('roles', ['user'])
+        # Parse roles from comma-separated string
+        roles = row_dict.get('roles', 'user')
         if isinstance(roles, str):
             roles = roles.split(',')
+        
+        # Parse datetime fields
+        created_at = None
+        if row_dict.get('created_at'):
+            created_at = datetime.fromisoformat(row_dict['created_at']) if row_dict['created_at'] else None
             
+        updated_at = None
+        if row_dict.get('updated_at'):
+            updated_at = datetime.fromisoformat(row_dict['updated_at']) if row_dict['updated_at'] else None
+            
+        last_login = None
+        if row_dict.get('last_login'):
+            last_login = datetime.fromisoformat(row_dict['last_login']) if row_dict['last_login'] else None
+        
+        # Create and return a new User instance
         return cls(
-            id=data.get('id'),
-            email=data.get('email', ''),
-            password_hash=data.get('password_hash', ''),
-            first_name=data.get('first_name', ''),
-            last_name=data.get('last_name', ''),
+            database=database_instance,
+            id_val=row_dict.get('id'),
+            email=row_dict.get('email', ''),
+            password_hash=row_dict.get('password_hash', ''),
+            first_name=row_dict.get('first_name', ''),
+            last_name=row_dict.get('last_name', ''),
             roles=roles,
-            is_active=data.get('is_active', True),
-            created_at=cls._parse_datetime(data.get('created_at')),
-            updated_at=cls._parse_datetime(data.get('updated_at')),
-            last_login=cls._parse_datetime(data.get('last_login'))
+            is_active=bool(row_dict.get('is_active', 1)),
+            created_at=created_at,
+            updated_at=updated_at,
+            last_login=last_login
         )
     
-    def to_dict(self, exclude_sensitive: bool = True) -> Dict[str, Any]:
+    def to_dict(self, exclude_sensitive=True):
         """
-        Convert User instance to a dictionary.
+        Convert User instance to a dictionary for API responses.
         
         Args:
             exclude_sensitive: Whether to exclude sensitive fields like password_hash
@@ -81,11 +132,11 @@ class User(BaseModel):
             'email': self.email,
             'first_name': self.first_name,
             'last_name': self.last_name,
-            'roles': ','.join(self.roles) if self.roles else '',
+            'roles': self.roles,
             'is_active': self.is_active,
-            'created_at': self._format_datetime(self.created_at),
-            'updated_at': self._format_datetime(self.updated_at),
-            'last_login': self._format_datetime(self.last_login)
+            'created_at': self._datetime_to_iso(self.created_at),
+            'updated_at': self._datetime_to_iso(self.updated_at),
+            'last_login': self._datetime_to_iso(self.last_login)
         }
         
         if not exclude_sensitive:
@@ -93,32 +144,20 @@ class User(BaseModel):
             
         return data
     
-    def save(self) -> int:
-        """
-        Save the user to the database.
+    def update_login_timestamp(self):
+        """Update the last login timestamp for the user."""
+        if not self.id:
+            logger.warning("Cannot update login timestamp for user without ID")
+            return
+            
+        self.last_login = datetime.utcnow()
         
-        Returns:
-            User ID
-        """
-        data = self.to_dict(exclude_sensitive=False)
-        
-        if self.id:
-            # Update existing user
-            data.pop('id')
-            data['updated_at'] = self._format_datetime(datetime.utcnow())
-            result = self.update(self.id, data)
-            logger.info(f"Updated user with ID {self.id}")
-            return self.id
-        else:
-            # Insert new user
-            data.pop('id', None)
-            data['created_at'] = self._format_datetime(datetime.utcnow())
-            data['updated_at'] = data['created_at']
-            self.id = self.insert(data)
-            logger.info(f"Created new user with ID {self.id}")
-            return self.id
+        # Use BaseModel's save method which handles updates
+        query = f"UPDATE {self.TABLE_NAME} SET last_login = ? WHERE id = ?"
+        self.database.execute(query, (self._datetime_to_iso(self.last_login), self.id), commit=True)
+        logger.debug(f"Updated last_login for user ID {self.id}")
     
-    def has_role(self, role: str) -> bool:
+    def has_role(self, role):
         """
         Check if the user has a specific role.
         
@@ -130,36 +169,39 @@ class User(BaseModel):
         """
         return role in self.roles if self.roles else False
     
-    def update_login_timestamp(self) -> None:
-        """Update the last login timestamp for the user."""
-        self.last_login = datetime.utcnow()
-        self.update(self.id, {'last_login': self._format_datetime(self.last_login)})
-        logger.debug(f"Updated last_login for user ID {self.id}")
-    
     @classmethod
-    def find_by_email(cls, email: str) -> Optional['User']:
+    def find_by_email(cls, database_instance, email):
         """
         Find a user by email address.
         
         Args:
+            database_instance: Database instance to use for the query
             email: Email to search for
             
         Returns:
             User instance if found, None otherwise
         """
-        query = f"SELECT * FROM {cls.table_name} WHERE email = ?"
-        result = cls.execute_query(query, (email,))
+        # Create a temporary instance to access the TABLE_NAME property
+        temp_instance = cls(database_instance)
         
-        if not result:
+        query = f"SELECT * FROM {temp_instance.TABLE_NAME} WHERE email = ?"
+        row_dict = database_instance.execute(query, (email,), fetchone=True)
+        
+        if not row_dict:
             return None
             
-        return cls.from_dict(result[0])
+        return cls._from_db_row(row_dict, database_instance)
     
     @classmethod
-    def create_tables(cls) -> None:
-        """Create the users table if it doesn't exist."""
+    def create_tables(cls, database_instance):
+        """
+        Create the users table if it doesn't exist.
+        
+        Args:
+            database_instance: Database instance to use for creating tables
+        """
         query = f"""
-        CREATE TABLE IF NOT EXISTS {cls.table_name} (
+        CREATE TABLE IF NOT EXISTS {cls.TABLE_NAME} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
@@ -172,10 +214,10 @@ class User(BaseModel):
             last_login TEXT
         )
         """
-        cls.execute_query(query)
-        logger.info(f"Created {cls.table_name} table if it didn't exist")
+        database_instance.execute(query, commit=True)
+        logger.info(f"Created {cls.TABLE_NAME} table if it didn't exist")
     
     @property
-    def full_name(self) -> str:
+    def full_name(self):
         """Get the user's full name."""
         return f"{self.first_name} {self.last_name}".strip()

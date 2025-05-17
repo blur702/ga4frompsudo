@@ -1,4 +1,4 @@
-Can # Flask and Web
+# Flask and Web
 Flask==2.3.3
 Werkzeug==2.3.7
 Jinja2==3.1.2
@@ -11,6 +11,9 @@ google-api-python-client==2.99.0
 google-auth==2.23.0
 google-auth-httplib2==0.1.0
 google-auth-oauthlib==1.1.0
+googleapis-common-protos==1.61.0
+protobuf==4.24.4
+httplib2==0.22.0
 
 # Database
 # SQLite3 is part of the Python standard library.
@@ -21,6 +24,7 @@ PyJWT==2.8.0
 
 # PDF Generation
 reportlab==4.0.5
+pillow==10.0.1  # Required by ReportLab
 
 # Date and Time
 python-dateutil==2.8.2
@@ -33,6 +37,15 @@ coverage==7.3.1
 
 # Development
 python-dotenv==1.0.0
+
+# HTTP and Requests
+requests==2.31.0
+urllib3<2.0.0  # Compatible with google-auth
+certifi==2023.7.22
+
+# Utilities
+six==1.16.0
+pytz==2023.3.post1
 
 # Optional Dependencies
 # pandas>=2.0.0

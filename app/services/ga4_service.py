@@ -9,7 +9,7 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 
-from app.utils.date_utils import format_date_for_ga4, parse_date_range
+from app.utils.date_utils import date_range_to_ga4_api_format, parse_date_range
 
 # Check if Google Analytics API is available
 try:
@@ -242,8 +242,16 @@ class GA4Service:
             
         try:
             # Format dates for GA4
-            start_date_str = format_date_for_ga4(start_date)
-            end_date_str = format_date_for_ga4(end_date)
+            # Convert datetime objects to strings if needed
+            if isinstance(start_date, datetime):
+                start_date = start_date.strftime('%Y-%m-%d')
+            if isinstance(end_date, datetime):
+                end_date = end_date.strftime('%Y-%m-%d')
+                
+            # Convert to GA4 API format
+            date_range = date_range_to_ga4_api_format(start_date, end_date)
+            start_date_str = date_range['startDate']
+            end_date_str = date_range['endDate']
             
             # Prepare metrics and dimensions
             metric_params = [{'name': m} for m in metrics]

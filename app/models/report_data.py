@@ -5,7 +5,7 @@ Stores individual data points or metrics associated with a generated Report.
 
 import logging
 import datetime
-from typing import Optional, List, Any, TYPE_CHECKING
+from typing import Optional, List, Any, Dict, TYPE_CHECKING
 from .base_model import BaseModel
 
 if TYPE_CHECKING:

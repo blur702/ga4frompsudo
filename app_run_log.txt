@@ -1,0 +1,465 @@
+2025-05-14 23:23:32 INFO root [logging_utils.configure_logging:90]: Logging configured for ga4_dashboard: console level=DEBUG, file level=INFO
+2025-05-14 23:23:32 INFO root [__init__.create_app:76]: Error logging configured to file: /Users/kevin/PycharmProjects/fromPsuedocode/logs/development_errors.log
+2025-05-14 23:23:32 INFO app [__init__.create_app:78]: Application factory `create_app` called.
+2025-05-14 23:23:32 INFO app [__init__.create_app:80]: Attempting to load configuration: 'development'
+2025-05-14 23:23:32 INFO app [config.init_app:80]: DevelopmentConfig initialized and applied.
+2025-05-14 23:23:32 INFO app [__init__.create_app:85]: Successfully configured application with 'development' settings.
+2025-05-14 23:23:32 INFO app [__init__.init_extensions:121]: Initializing extensions...
+2025-05-14 23:23:32 INFO app.utils [__init__.init_utils:129]: Initializing utility modules...
+2025-05-14 23:23:32 DEBUG app.utils [__init__.register_template_filters:154]: Registered formatter template filters
+2025-05-14 23:23:32 DEBUG app.utils [__init__.register_template_filters:161]: Registered accessibility template filters
+2025-05-14 23:23:32 INFO app.utils [__init__.init_utils:137]: Utility modules initialized successfully
+2025-05-14 23:23:32 DEBUG app.models [__init__.<module>:39]: app.models package initialized and models imported.
+2025-05-14 23:23:32 INFO app.models.database [database.__init__:34]: Database manager initialized for database at: ga4_dashboard.db
+2025-05-14 23:23:32 DEBUG app.models.database [database._get_connection:49]: New SQLite connection established for thread 140704425511872 to ga4_dashboard.db
+2025-05-14 23:23:32 INFO app.models.database [database.initialize:80]: Initializing database schema...
+2025-05-14 23:23:32 DEBUG app.models.database [database.initialize:93]: Table 'properties' ensured.
+2025-05-14 23:23:32 DEBUG app.models.database [database.initialize:107]: Table 'websites' ensured.
+2025-05-14 23:23:32 DEBUG app.models.database [database.initialize:121]: Table 'reports' ensured.
+2025-05-14 23:23:32 DEBUG app.models.database [database.initialize:141]: Table 'report_data' ensured.
+2025-05-14 23:23:32 DEBUG app.models.database [database.initialize:158]: Table 'users' ensured.
+2025-05-14 23:23:32 INFO app.models.database [database.initialize:161]: Database schema initialization successful.
+2025-05-14 23:23:32 INFO app [__init__.init_extensions:132]: Database initialized at: ga4_dashboard.db
+2025-05-14 23:23:32 INFO app [__init__.init_services:153]: Initializing application services...
+2025-05-14 23:23:32 INFO app.services [__init__.init_services:32]: Initializing application services...
+2025-05-14 23:23:32 INFO app.services.security_service [security_service._load_or_generate_fernet_key:110]: Fernet encryption key loaded successfully from: /Users/kevin/PycharmProjects/fromPsuedocode/app/../security/encryption_app.key
+2025-05-14 23:23:32 INFO app.services.security_service [security_service.__init__:72]: SecurityService initialized successfully.
+2025-05-14 23:23:32 INFO app.services [__init__.init_services:41]: Security service initialized
+2025-05-14 23:23:32 DEBUG app.services [__init__.init_services:46]: Authentication service initialized with database: <app.models.database.Database object at 0x103c91610>
+2025-05-14 23:23:32 INFO app.services [__init__.init_services:47]: Authentication service initialized
+2025-05-14 23:23:32 WARNING app.services [__init__.init_services:56]: GA4 service not initialized: credentials not found at /Users/kevin/PycharmProjects/fromPsuedocode/app/../credentials/ga4_credentials.json
+2025-05-14 23:23:32 INFO app.services.plugin_service [plugin_service.__init__:27]: Plugin Service initialized
+2025-05-14 23:23:32 INFO app.services [__init__.init_services:61]: Plugin service initialized
+2025-05-14 23:23:32 INFO app.services.report_service [report_service.__init__:51]: Report Service initialized
+2025-05-14 23:23:32 INFO app.services [__init__.init_services:66]: Report service initialized
+2025-05-14 23:23:32 INFO app.services [__init__.init_services:68]: All services initialized successfully
+2025-05-14 23:23:32 DEBUG app [__init__.init_services:166]: Attached security service to app as 'security_service'
+2025-05-14 23:23:32 DEBUG app [__init__.init_services:166]: Attached auth service to app as 'auth_service'
+2025-05-14 23:23:32 DEBUG app [__init__.init_services:166]: Attached plugin service to app as 'plugin_service'
+2025-05-14 23:23:32 DEBUG app [__init__.init_services:166]: Attached report service to app as 'report_service'
+2025-05-14 23:23:32 INFO app [__init__.init_services:168]: Service initialization completed successfully
+2025-05-14 23:23:32 INFO app [__init__.init_plugins:179]: Initializing and registering plugins...
+2025-05-14 23:23:32 INFO app.services.plugin_service [plugin_service.discover_plugins:56]: Discovered 2 plugin modules: ['app.plugins.base_plugin', 'app.plugins.engagement_metrics']
+2025-05-14 23:23:32 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: None (BasePlugin)
+2025-05-14 23:23:32 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: None (BasePlugin)
+2025-05-14 23:23:32 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: engagement_metrics (EngagementMetricsPlugin)
+2025-05-14 23:23:32 INFO app.services.plugin_service [plugin_service.register_plugins:84]: Registered 2 plugins: [None, 'engagement_metrics']
+2025-05-14 23:23:32 INFO app [__init__.init_plugins:191]: Registered 2 plugins: [None, 'engagement_metrics']
+2025-05-14 23:23:32 INFO app [__init__.init_plugins:195]: Plugin initialization completed
+2025-05-14 23:23:32 INFO app [__init__.init_extensions:142]: Extensions initialization process completed.
+2025-05-14 23:23:32 INFO app [__init__.register_blueprints:205]: Registering application blueprints...
+2025-05-14 23:23:32 INFO app.controllers [__init__.init_controllers:25]: Initializing controllers...
+2025-05-14 23:23:32 INFO app.controllers [__init__.init_controllers:37]: Registered auth blueprint
+2025-05-14 23:23:32 INFO app.controllers [__init__.init_controllers:41]: Registered dashboard blueprint
+2025-05-14 23:23:32 INFO app.controllers [__init__.init_controllers:45]: Registered reports blueprint
+2025-05-14 23:23:32 INFO app.controllers [__init__.init_controllers:49]: Registered API blueprint
+2025-05-14 23:23:32 INFO app.controllers [__init__.init_controllers:53]: Registered admin blueprint
+2025-05-14 23:23:32 INFO app.controllers [__init__.init_controllers:55]: All controllers initialized successfully
+2025-05-14 23:23:32 INFO app [__init__.register_blueprints:213]: Blueprint registration completed successfully
+2025-05-14 23:23:32 INFO app [__init__.register_error_handlers:224]: Registering custom error handlers...
+2025-05-14 23:23:32 INFO app [__init__.register_error_handlers:230]: Custom error handlers registered.
+2025-05-14 23:23:32 INFO app [__init__.register_context_processors:241]: Registering context processors...
+2025-05-14 23:23:32 INFO app [__init__.register_context_processors:249]: Context processors registered.
+2025-05-14 23:23:32 INFO app [__init__.register_shell_context:260]: Registering shell context processor...
+2025-05-14 23:23:32 INFO app [__init__.register_shell_context:276]: Shell context processor registered.
+2025-05-14 23:23:32 INFO app [__init__.create_app:110]: GA4 Analytics Dashboard application instance created successfully with 'development' configuration.
+2025-05-14 23:23:32 INFO app [run.<module>:40]: Starting GA4 Analytics Dashboard application on http://127.0.0.1:8080
+2025-05-14 23:23:32 INFO app [run.<module>:41]: Application debug mode is: True
+ * Serving Flask app 'app'
+ * Debug mode: on
+2025-05-14 23:23:32 INFO werkzeug [_internal._log:97]: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8080
+2025-05-14 23:23:32 INFO werkzeug [_internal._log:97]: [33mPress CTRL+C to quit[0m
+2025-05-14 23:23:32 INFO werkzeug [_internal._log:97]:  * Restarting with stat
+2025-05-14 23:23:33 INFO root [logging_utils.configure_logging:90]: Logging configured for ga4_dashboard: console level=DEBUG, file level=INFO
+2025-05-14 23:23:33 INFO root [__init__.create_app:76]: Error logging configured to file: /Users/kevin/PycharmProjects/fromPsuedocode/logs/development_errors.log
+2025-05-14 23:23:33 INFO app [__init__.create_app:78]: Application factory `create_app` called.
+2025-05-14 23:23:33 INFO app [__init__.create_app:80]: Attempting to load configuration: 'development'
+2025-05-14 23:23:33 INFO app [config.init_app:80]: DevelopmentConfig initialized and applied.
+2025-05-14 23:23:33 INFO app [__init__.create_app:85]: Successfully configured application with 'development' settings.
+2025-05-14 23:23:33 INFO app [__init__.init_extensions:121]: Initializing extensions...
+2025-05-14 23:23:33 INFO app.utils [__init__.init_utils:129]: Initializing utility modules...
+2025-05-14 23:23:33 DEBUG app.utils [__init__.register_template_filters:154]: Registered formatter template filters
+2025-05-14 23:23:33 DEBUG app.utils [__init__.register_template_filters:161]: Registered accessibility template filters
+2025-05-14 23:23:33 INFO app.utils [__init__.init_utils:137]: Utility modules initialized successfully
+2025-05-14 23:23:33 DEBUG app.models [__init__.<module>:39]: app.models package initialized and models imported.
+2025-05-14 23:23:33 INFO app.models.database [database.__init__:34]: Database manager initialized for database at: ga4_dashboard.db
+2025-05-14 23:23:33 DEBUG app.models.database [database._get_connection:49]: New SQLite connection established for thread 140704425511872 to ga4_dashboard.db
+2025-05-14 23:23:33 INFO app.models.database [database.initialize:80]: Initializing database schema...
+2025-05-14 23:23:33 DEBUG app.models.database [database.initialize:93]: Table 'properties' ensured.
+2025-05-14 23:23:33 DEBUG app.models.database [database.initialize:107]: Table 'websites' ensured.
+2025-05-14 23:23:33 DEBUG app.models.database [database.initialize:121]: Table 'reports' ensured.
+2025-05-14 23:23:33 DEBUG app.models.database [database.initialize:141]: Table 'report_data' ensured.
+2025-05-14 23:23:33 DEBUG app.models.database [database.initialize:158]: Table 'users' ensured.
+2025-05-14 23:23:33 INFO app.models.database [database.initialize:161]: Database schema initialization successful.
+2025-05-14 23:23:33 INFO app [__init__.init_extensions:132]: Database initialized at: ga4_dashboard.db
+2025-05-14 23:23:33 INFO app [__init__.init_services:153]: Initializing application services...
+2025-05-14 23:23:33 INFO app.services [__init__.init_services:32]: Initializing application services...
+2025-05-14 23:23:33 INFO app.services.security_service [security_service._load_or_generate_fernet_key:110]: Fernet encryption key loaded successfully from: /Users/kevin/PycharmProjects/fromPsuedocode/app/../security/encryption_app.key
+2025-05-14 23:23:33 INFO app.services.security_service [security_service.__init__:72]: SecurityService initialized successfully.
+2025-05-14 23:23:33 INFO app.services [__init__.init_services:41]: Security service initialized
+2025-05-14 23:23:33 DEBUG app.services [__init__.init_services:46]: Authentication service initialized with database: <app.models.database.Database object at 0x1056d4a10>
+2025-05-14 23:23:33 INFO app.services [__init__.init_services:47]: Authentication service initialized
+2025-05-14 23:23:33 WARNING app.services [__init__.init_services:56]: GA4 service not initialized: credentials not found at /Users/kevin/PycharmProjects/fromPsuedocode/app/../credentials/ga4_credentials.json
+2025-05-14 23:23:33 INFO app.services.plugin_service [plugin_service.__init__:27]: Plugin Service initialized
+2025-05-14 23:23:33 INFO app.services [__init__.init_services:61]: Plugin service initialized
+2025-05-14 23:23:33 INFO app.services.report_service [report_service.__init__:51]: Report Service initialized
+2025-05-14 23:23:33 INFO app.services [__init__.init_services:66]: Report service initialized
+2025-05-14 23:23:33 INFO app.services [__init__.init_services:68]: All services initialized successfully
+2025-05-14 23:23:33 DEBUG app [__init__.init_services:166]: Attached security service to app as 'security_service'
+2025-05-14 23:23:33 DEBUG app [__init__.init_services:166]: Attached auth service to app as 'auth_service'
+2025-05-14 23:23:33 DEBUG app [__init__.init_services:166]: Attached plugin service to app as 'plugin_service'
+2025-05-14 23:23:33 DEBUG app [__init__.init_services:166]: Attached report service to app as 'report_service'
+2025-05-14 23:23:33 INFO app [__init__.init_services:168]: Service initialization completed successfully
+2025-05-14 23:23:33 INFO app [__init__.init_plugins:179]: Initializing and registering plugins...
+2025-05-14 23:23:33 INFO app.services.plugin_service [plugin_service.discover_plugins:56]: Discovered 2 plugin modules: ['app.plugins.base_plugin', 'app.plugins.engagement_metrics']
+2025-05-14 23:23:33 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: None (BasePlugin)
+2025-05-14 23:23:33 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: None (BasePlugin)
+2025-05-14 23:23:33 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: engagement_metrics (EngagementMetricsPlugin)
+2025-05-14 23:23:33 INFO app.services.plugin_service [plugin_service.register_plugins:84]: Registered 2 plugins: [None, 'engagement_metrics']
+2025-05-14 23:23:33 INFO app [__init__.init_plugins:191]: Registered 2 plugins: [None, 'engagement_metrics']
+2025-05-14 23:23:33 INFO app [__init__.init_plugins:195]: Plugin initialization completed
+2025-05-14 23:23:33 INFO app [__init__.init_extensions:142]: Extensions initialization process completed.
+2025-05-14 23:23:33 INFO app [__init__.register_blueprints:205]: Registering application blueprints...
+2025-05-14 23:23:33 INFO app.controllers [__init__.init_controllers:25]: Initializing controllers...
+2025-05-14 23:23:33 INFO app.controllers [__init__.init_controllers:37]: Registered auth blueprint
+2025-05-14 23:23:33 INFO app.controllers [__init__.init_controllers:41]: Registered dashboard blueprint
+2025-05-14 23:23:33 INFO app.controllers [__init__.init_controllers:45]: Registered reports blueprint
+2025-05-14 23:23:33 INFO app.controllers [__init__.init_controllers:49]: Registered API blueprint
+2025-05-14 23:23:33 INFO app.controllers [__init__.init_controllers:53]: Registered admin blueprint
+2025-05-14 23:23:33 INFO app.controllers [__init__.init_controllers:55]: All controllers initialized successfully
+2025-05-14 23:23:33 INFO app [__init__.register_blueprints:213]: Blueprint registration completed successfully
+2025-05-14 23:23:33 INFO app [__init__.register_error_handlers:224]: Registering custom error handlers...
+2025-05-14 23:23:33 INFO app [__init__.register_error_handlers:230]: Custom error handlers registered.
+2025-05-14 23:23:33 INFO app [__init__.register_context_processors:241]: Registering context processors...
+2025-05-14 23:23:33 INFO app [__init__.register_context_processors:249]: Context processors registered.
+2025-05-14 23:23:33 INFO app [__init__.register_shell_context:260]: Registering shell context processor...
+2025-05-14 23:23:33 INFO app [__init__.register_shell_context:276]: Shell context processor registered.
+2025-05-14 23:23:33 INFO app [__init__.create_app:110]: GA4 Analytics Dashboard application instance created successfully with 'development' configuration.
+2025-05-14 23:23:33 INFO app [run.<module>:40]: Starting GA4 Analytics Dashboard application on http://127.0.0.1:8080
+2025-05-14 23:23:33 INFO app [run.<module>:41]: Application debug mode is: True
+2025-05-14 23:23:33 WARNING werkzeug [_internal._log:97]:  * Debugger is active!
+2025-05-14 23:23:33 INFO werkzeug [_internal._log:97]:  * Debugger PIN: 489-346-640
+2025-05-14 23:23:37 WARNING app.controllers.dashboard_controller [dashboard_controller.index:24]: DEVELOPMENT MODE: Redirecting root to admin dashboard
+2025-05-14 23:23:37 INFO werkzeug [_internal._log:97]: 127.0.0.1 - - [14/May/2025 23:23:37] "[32mGET / HTTP/1.1[0m" 302 -
+2025-05-14 23:23:52 WARNING app.controllers.auth_controller [auth_controller.wrapped_view:118]: DEVELOPMENT MODE: Admin authentication bypassed, using admin session
+2025-05-14 23:23:52 INFO werkzeug [_internal._log:97]: 127.0.0.1 - - [14/May/2025 23:23:52] "GET /admin/ HTTP/1.1" 200 -
+2025-05-14 23:23:57 WARNING app.controllers.auth_controller [auth_controller.wrapped_view:118]: DEVELOPMENT MODE: Admin authentication bypassed, using admin session
+2025-05-14 23:23:57 INFO werkzeug [_internal._log:97]: 127.0.0.1 - - [14/May/2025 23:23:57] "GET /admin/ga4-config HTTP/1.1" 200 -
+2025-05-14 23:25:37 INFO werkzeug [_internal._log:97]:  * Detected change in '/Users/kevin/PycharmProjects/fromPsuedocode/run.py', reloading
+2025-05-14 23:25:38 INFO werkzeug [_internal._log:97]:  * Restarting with stat
+2025-05-14 23:25:38 INFO root [logging_utils.configure_logging:90]: Logging configured for ga4_dashboard: console level=DEBUG, file level=INFO
+2025-05-14 23:25:38 INFO root [__init__.create_app:76]: Error logging configured to file: /Users/kevin/PycharmProjects/fromPsuedocode/logs/development_errors.log
+2025-05-14 23:25:38 INFO app [__init__.create_app:78]: Application factory `create_app` called.
+2025-05-14 23:25:38 INFO app [__init__.create_app:80]: Attempting to load configuration: 'development'
+2025-05-14 23:25:38 INFO app [config.init_app:80]: DevelopmentConfig initialized and applied.
+2025-05-14 23:25:38 INFO app [__init__.create_app:85]: Successfully configured application with 'development' settings.
+2025-05-14 23:25:38 INFO app [__init__.init_extensions:121]: Initializing extensions...
+2025-05-14 23:25:38 INFO app.utils [__init__.init_utils:129]: Initializing utility modules...
+2025-05-14 23:25:38 DEBUG app.utils [__init__.register_template_filters:154]: Registered formatter template filters
+2025-05-14 23:25:38 DEBUG app.utils [__init__.register_template_filters:161]: Registered accessibility template filters
+2025-05-14 23:25:38 INFO app.utils [__init__.init_utils:137]: Utility modules initialized successfully
+2025-05-14 23:25:38 DEBUG app.models [__init__.<module>:39]: app.models package initialized and models imported.
+2025-05-14 23:25:38 INFO app.models.database [database.__init__:34]: Database manager initialized for database at: ga4_dashboard.db
+2025-05-14 23:25:38 DEBUG app.models.database [database._get_connection:49]: New SQLite connection established for thread 140704425511872 to ga4_dashboard.db
+2025-05-14 23:25:38 INFO app.models.database [database.initialize:80]: Initializing database schema...
+2025-05-14 23:25:38 DEBUG app.models.database [database.initialize:93]: Table 'properties' ensured.
+2025-05-14 23:25:38 DEBUG app.models.database [database.initialize:107]: Table 'websites' ensured.
+2025-05-14 23:25:38 DEBUG app.models.database [database.initialize:121]: Table 'reports' ensured.
+2025-05-14 23:25:38 DEBUG app.models.database [database.initialize:141]: Table 'report_data' ensured.
+2025-05-14 23:25:38 DEBUG app.models.database [database.initialize:158]: Table 'users' ensured.
+2025-05-14 23:25:38 INFO app.models.database [database.initialize:161]: Database schema initialization successful.
+2025-05-14 23:25:38 INFO app [__init__.init_extensions:132]: Database initialized at: ga4_dashboard.db
+2025-05-14 23:25:38 INFO app [__init__.init_services:153]: Initializing application services...
+2025-05-14 23:25:38 INFO app.services [__init__.init_services:32]: Initializing application services...
+2025-05-14 23:25:38 INFO app.services.security_service [security_service._load_or_generate_fernet_key:110]: Fernet encryption key loaded successfully from: /Users/kevin/PycharmProjects/fromPsuedocode/app/../security/encryption_app.key
+2025-05-14 23:25:38 INFO app.services.security_service [security_service.__init__:72]: SecurityService initialized successfully.
+2025-05-14 23:25:38 INFO app.services [__init__.init_services:41]: Security service initialized
+2025-05-14 23:25:38 DEBUG app.services [__init__.init_services:46]: Authentication service initialized with database: <app.models.database.Database object at 0x10da998e0>
+2025-05-14 23:25:38 INFO app.services [__init__.init_services:47]: Authentication service initialized
+2025-05-14 23:25:38 WARNING app.services [__init__.init_services:56]: GA4 service not initialized: credentials not found at /Users/kevin/PycharmProjects/fromPsuedocode/app/../credentials/ga4_credentials.json
+2025-05-14 23:25:38 INFO app.services.plugin_service [plugin_service.__init__:27]: Plugin Service initialized
+2025-05-14 23:25:38 INFO app.services [__init__.init_services:61]: Plugin service initialized
+2025-05-14 23:25:38 INFO app.services.report_service [report_service.__init__:51]: Report Service initialized
+2025-05-14 23:25:38 INFO app.services [__init__.init_services:66]: Report service initialized
+2025-05-14 23:25:38 INFO app.services [__init__.init_services:68]: All services initialized successfully
+2025-05-14 23:25:38 DEBUG app [__init__.init_services:166]: Attached security service to app as 'security_service'
+2025-05-14 23:25:38 DEBUG app [__init__.init_services:166]: Attached auth service to app as 'auth_service'
+2025-05-14 23:25:38 DEBUG app [__init__.init_services:166]: Attached plugin service to app as 'plugin_service'
+2025-05-14 23:25:38 DEBUG app [__init__.init_services:166]: Attached report service to app as 'report_service'
+2025-05-14 23:25:38 INFO app [__init__.init_services:168]: Service initialization completed successfully
+2025-05-14 23:25:38 INFO app [__init__.init_plugins:179]: Initializing and registering plugins...
+2025-05-14 23:25:38 INFO app.services.plugin_service [plugin_service.discover_plugins:56]: Discovered 2 plugin modules: ['app.plugins.base_plugin', 'app.plugins.engagement_metrics']
+2025-05-14 23:25:38 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: None (BasePlugin)
+2025-05-14 23:25:38 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: None (BasePlugin)
+2025-05-14 23:25:38 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: engagement_metrics (EngagementMetricsPlugin)
+2025-05-14 23:25:38 INFO app.services.plugin_service [plugin_service.register_plugins:84]: Registered 2 plugins: [None, 'engagement_metrics']
+2025-05-14 23:25:38 INFO app [__init__.init_plugins:191]: Registered 2 plugins: [None, 'engagement_metrics']
+2025-05-14 23:25:38 INFO app [__init__.init_plugins:195]: Plugin initialization completed
+2025-05-14 23:25:38 INFO app [__init__.init_extensions:142]: Extensions initialization process completed.
+2025-05-14 23:25:38 INFO app [__init__.register_blueprints:205]: Registering application blueprints...
+2025-05-14 23:25:38 INFO app.controllers [__init__.init_controllers:25]: Initializing controllers...
+2025-05-14 23:25:38 INFO app.controllers [__init__.init_controllers:37]: Registered auth blueprint
+2025-05-14 23:25:38 INFO app.controllers [__init__.init_controllers:41]: Registered dashboard blueprint
+2025-05-14 23:25:38 INFO app.controllers [__init__.init_controllers:45]: Registered reports blueprint
+2025-05-14 23:25:38 INFO app.controllers [__init__.init_controllers:49]: Registered API blueprint
+2025-05-14 23:25:38 INFO app.controllers [__init__.init_controllers:53]: Registered admin blueprint
+2025-05-14 23:25:38 INFO app.controllers [__init__.init_controllers:55]: All controllers initialized successfully
+2025-05-14 23:25:38 INFO app [__init__.register_blueprints:213]: Blueprint registration completed successfully
+2025-05-14 23:25:38 INFO app [__init__.register_error_handlers:224]: Registering custom error handlers...
+2025-05-14 23:25:38 INFO app [__init__.register_error_handlers:230]: Custom error handlers registered.
+2025-05-14 23:25:38 INFO app [__init__.register_context_processors:241]: Registering context processors...
+2025-05-14 23:25:38 INFO app [__init__.register_context_processors:249]: Context processors registered.
+2025-05-14 23:25:38 INFO app [__init__.register_shell_context:260]: Registering shell context processor...
+2025-05-14 23:25:38 INFO app [__init__.register_shell_context:276]: Shell context processor registered.
+2025-05-14 23:25:38 INFO app [__init__.create_app:110]: GA4 Analytics Dashboard application instance created successfully with 'development' configuration.
+2025-05-14 23:25:38 INFO app [run.<module>:46]: Starting GA4 Analytics Dashboard application on http://127.0.0.1:5000
+2025-05-14 23:25:38 INFO app [run.<module>:47]: Application debug mode is: True
+2025-05-14 23:25:38 WARNING werkzeug [_internal._log:97]:  * Debugger is active!
+2025-05-14 23:25:38 INFO werkzeug [_internal._log:97]:  * Debugger PIN: 489-346-640
+2025-05-14 23:38:59 INFO werkzeug [_internal._log:97]:  * Detected change in '/Users/kevin/PycharmProjects/fromPsuedocode/app/controllers/admin_controller.py', reloading
+2025-05-14 23:38:59 INFO werkzeug [_internal._log:97]:  * Restarting with stat
+2025-05-14 23:38:59 INFO root [logging_utils.configure_logging:90]: Logging configured for ga4_dashboard: console level=DEBUG, file level=INFO
+2025-05-14 23:38:59 INFO root [__init__.create_app:76]: Error logging configured to file: /Users/kevin/PycharmProjects/fromPsuedocode/logs/development_errors.log
+2025-05-14 23:38:59 INFO app [__init__.create_app:78]: Application factory `create_app` called.
+2025-05-14 23:38:59 INFO app [__init__.create_app:80]: Attempting to load configuration: 'development'
+2025-05-14 23:38:59 INFO app [config.init_app:80]: DevelopmentConfig initialized and applied.
+2025-05-14 23:38:59 INFO app [__init__.create_app:85]: Successfully configured application with 'development' settings.
+2025-05-14 23:38:59 INFO app [__init__.init_extensions:121]: Initializing extensions...
+2025-05-14 23:38:59 INFO app.utils [__init__.init_utils:129]: Initializing utility modules...
+2025-05-14 23:38:59 DEBUG app.utils [__init__.register_template_filters:154]: Registered formatter template filters
+2025-05-14 23:38:59 DEBUG app.utils [__init__.register_template_filters:161]: Registered accessibility template filters
+2025-05-14 23:38:59 INFO app.utils [__init__.init_utils:137]: Utility modules initialized successfully
+2025-05-14 23:38:59 DEBUG app.models [__init__.<module>:39]: app.models package initialized and models imported.
+2025-05-14 23:38:59 INFO app.models.database [database.__init__:34]: Database manager initialized for database at: ga4_dashboard.db
+2025-05-14 23:38:59 DEBUG app.models.database [database._get_connection:49]: New SQLite connection established for thread 140704425511872 to ga4_dashboard.db
+2025-05-14 23:38:59 INFO app.models.database [database.initialize:80]: Initializing database schema...
+2025-05-14 23:38:59 DEBUG app.models.database [database.initialize:93]: Table 'properties' ensured.
+2025-05-14 23:38:59 DEBUG app.models.database [database.initialize:107]: Table 'websites' ensured.
+2025-05-14 23:38:59 DEBUG app.models.database [database.initialize:121]: Table 'reports' ensured.
+2025-05-14 23:38:59 DEBUG app.models.database [database.initialize:141]: Table 'report_data' ensured.
+2025-05-14 23:38:59 DEBUG app.models.database [database.initialize:158]: Table 'users' ensured.
+2025-05-14 23:38:59 INFO app.models.database [database.initialize:161]: Database schema initialization successful.
+2025-05-14 23:38:59 INFO app [__init__.init_extensions:132]: Database initialized at: ga4_dashboard.db
+2025-05-14 23:38:59 INFO app [__init__.init_services:153]: Initializing application services...
+2025-05-14 23:38:59 INFO app.services [__init__.init_services:32]: Initializing application services...
+2025-05-14 23:38:59 INFO app.services.security_service [security_service._load_or_generate_fernet_key:110]: Fernet encryption key loaded successfully from: /Users/kevin/PycharmProjects/fromPsuedocode/app/../security/encryption_app.key
+2025-05-14 23:38:59 INFO app.services.security_service [security_service.__init__:72]: SecurityService initialized successfully.
+2025-05-14 23:38:59 INFO app.services [__init__.init_services:41]: Security service initialized
+2025-05-14 23:38:59 DEBUG app.services [__init__.init_services:46]: Authentication service initialized with database: <app.models.database.Database object at 0x1027dbfb0>
+2025-05-14 23:38:59 INFO app.services [__init__.init_services:47]: Authentication service initialized
+2025-05-14 23:38:59 ERROR app.services.ga4_service [ga4_service._init_services:80]: Error initializing GA4 API services: Invalid control character at: line 5 column 46 (char 143)
+Traceback (most recent call last):
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/app/services/ga4_service.py", line 69, in _init_services
+    self._credentials = Credentials.from_service_account_file(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/.venv/lib/python3.12/site-packages/google/oauth2/service_account.py", line 260, in from_service_account_file
+    info, signer = _service_account_info.from_filename(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/.venv/lib/python3.12/site-packages/google/auth/_service_account_info.py", line 79, in from_filename
+    data = json.load(json_file)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/decoder.py", line 354, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Invalid control character at: line 5 column 46 (char 143)
+2025-05-14 23:38:59 ERROR app.services.ga4_service [ga4_service.__init__:57]: Failed to initialize GA4 Service: Invalid control character at: line 5 column 46 (char 143)
+Traceback (most recent call last):
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/app/services/ga4_service.py", line 54, in __init__
+    self._init_services()
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/app/services/ga4_service.py", line 69, in _init_services
+    self._credentials = Credentials.from_service_account_file(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/.venv/lib/python3.12/site-packages/google/oauth2/service_account.py", line 260, in from_service_account_file
+    info, signer = _service_account_info.from_filename(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/.venv/lib/python3.12/site-packages/google/auth/_service_account_info.py", line 79, in from_filename
+    data = json.load(json_file)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/decoder.py", line 354, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Invalid control character at: line 5 column 46 (char 143)
+2025-05-14 23:38:59 INFO app.services [__init__.init_services:54]: GA4 service initialized
+2025-05-14 23:38:59 INFO app.services.plugin_service [plugin_service.__init__:27]: Plugin Service initialized
+2025-05-14 23:38:59 INFO app.services [__init__.init_services:61]: Plugin service initialized
+2025-05-14 23:38:59 INFO app.services.report_service [report_service.__init__:51]: Report Service initialized
+2025-05-14 23:38:59 INFO app.services [__init__.init_services:66]: Report service initialized
+2025-05-14 23:38:59 INFO app.services [__init__.init_services:68]: All services initialized successfully
+2025-05-14 23:38:59 DEBUG app [__init__.init_services:166]: Attached security service to app as 'security_service'
+2025-05-14 23:38:59 DEBUG app [__init__.init_services:166]: Attached auth service to app as 'auth_service'
+2025-05-14 23:38:59 DEBUG app [__init__.init_services:166]: Attached ga4 service to app as 'ga4_service'
+2025-05-14 23:38:59 DEBUG app [__init__.init_services:166]: Attached plugin service to app as 'plugin_service'
+2025-05-14 23:38:59 DEBUG app [__init__.init_services:166]: Attached report service to app as 'report_service'
+2025-05-14 23:38:59 INFO app [__init__.init_services:168]: Service initialization completed successfully
+2025-05-14 23:38:59 INFO app [__init__.init_plugins:179]: Initializing and registering plugins...
+2025-05-14 23:38:59 INFO app.services.plugin_service [plugin_service.discover_plugins:56]: Discovered 2 plugin modules: ['app.plugins.base_plugin', 'app.plugins.engagement_metrics']
+2025-05-14 23:38:59 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: None (BasePlugin)
+2025-05-14 23:38:59 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: None (BasePlugin)
+2025-05-14 23:38:59 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: engagement_metrics (EngagementMetricsPlugin)
+2025-05-14 23:38:59 INFO app.services.plugin_service [plugin_service.register_plugins:84]: Registered 2 plugins: [None, 'engagement_metrics']
+2025-05-14 23:38:59 INFO app [__init__.init_plugins:191]: Registered 2 plugins: [None, 'engagement_metrics']
+2025-05-14 23:38:59 INFO app [__init__.init_plugins:195]: Plugin initialization completed
+2025-05-14 23:38:59 INFO app [__init__.init_extensions:142]: Extensions initialization process completed.
+2025-05-14 23:38:59 INFO app [__init__.register_blueprints:205]: Registering application blueprints...
+2025-05-14 23:38:59 INFO app.controllers [__init__.init_controllers:25]: Initializing controllers...
+2025-05-14 23:38:59 INFO app.controllers [__init__.init_controllers:37]: Registered auth blueprint
+2025-05-14 23:38:59 INFO app.controllers [__init__.init_controllers:41]: Registered dashboard blueprint
+2025-05-14 23:38:59 INFO app.controllers [__init__.init_controllers:45]: Registered reports blueprint
+2025-05-14 23:38:59 INFO app.controllers [__init__.init_controllers:49]: Registered API blueprint
+2025-05-14 23:38:59 INFO app.controllers [__init__.init_controllers:53]: Registered admin blueprint
+2025-05-14 23:38:59 INFO app.controllers [__init__.init_controllers:55]: All controllers initialized successfully
+2025-05-14 23:38:59 INFO app [__init__.register_blueprints:213]: Blueprint registration completed successfully
+2025-05-14 23:38:59 INFO app [__init__.register_error_handlers:224]: Registering custom error handlers...
+2025-05-14 23:38:59 INFO app [__init__.register_error_handlers:230]: Custom error handlers registered.
+2025-05-14 23:38:59 INFO app [__init__.register_context_processors:241]: Registering context processors...
+2025-05-14 23:38:59 INFO app [__init__.register_context_processors:249]: Context processors registered.
+2025-05-14 23:38:59 INFO app [__init__.register_shell_context:260]: Registering shell context processor...
+2025-05-14 23:38:59 INFO app [__init__.register_shell_context:276]: Shell context processor registered.
+2025-05-14 23:38:59 INFO app [__init__.create_app:110]: GA4 Analytics Dashboard application instance created successfully with 'development' configuration.
+2025-05-14 23:38:59 INFO app [run.<module>:46]: Starting GA4 Analytics Dashboard application on http://127.0.0.1:5000
+2025-05-14 23:38:59 INFO app [run.<module>:47]: Application debug mode is: True
+2025-05-14 23:38:59 WARNING werkzeug [_internal._log:97]:  * Debugger is active!
+2025-05-14 23:38:59 INFO werkzeug [_internal._log:97]:  * Debugger PIN: 489-346-640
+2025-05-14 23:39:42 INFO werkzeug [_internal._log:97]:  * Detected change in '/Users/kevin/PycharmProjects/fromPsuedocode/app/controllers/admin_controller.py', reloading
+2025-05-14 23:39:42 INFO werkzeug [_internal._log:97]:  * Restarting with stat
+2025-05-14 23:39:42 INFO root [logging_utils.configure_logging:90]: Logging configured for ga4_dashboard: console level=DEBUG, file level=INFO
+2025-05-14 23:39:42 INFO root [__init__.create_app:76]: Error logging configured to file: /Users/kevin/PycharmProjects/fromPsuedocode/logs/development_errors.log
+2025-05-14 23:39:42 INFO app [__init__.create_app:78]: Application factory `create_app` called.
+2025-05-14 23:39:42 INFO app [__init__.create_app:80]: Attempting to load configuration: 'development'
+2025-05-14 23:39:42 INFO app [config.init_app:80]: DevelopmentConfig initialized and applied.
+2025-05-14 23:39:42 INFO app [__init__.create_app:85]: Successfully configured application with 'development' settings.
+2025-05-14 23:39:42 INFO app [__init__.init_extensions:121]: Initializing extensions...
+2025-05-14 23:39:42 INFO app.utils [__init__.init_utils:129]: Initializing utility modules...
+2025-05-14 23:39:42 DEBUG app.utils [__init__.register_template_filters:154]: Registered formatter template filters
+2025-05-14 23:39:42 DEBUG app.utils [__init__.register_template_filters:161]: Registered accessibility template filters
+2025-05-14 23:39:42 INFO app.utils [__init__.init_utils:137]: Utility modules initialized successfully
+2025-05-14 23:39:42 DEBUG app.models [__init__.<module>:39]: app.models package initialized and models imported.
+2025-05-14 23:39:42 INFO app.models.database [database.__init__:34]: Database manager initialized for database at: ga4_dashboard.db
+2025-05-14 23:39:42 DEBUG app.models.database [database._get_connection:49]: New SQLite connection established for thread 140704425511872 to ga4_dashboard.db
+2025-05-14 23:39:42 INFO app.models.database [database.initialize:80]: Initializing database schema...
+2025-05-14 23:39:42 DEBUG app.models.database [database.initialize:93]: Table 'properties' ensured.
+2025-05-14 23:39:42 DEBUG app.models.database [database.initialize:107]: Table 'websites' ensured.
+2025-05-14 23:39:42 DEBUG app.models.database [database.initialize:121]: Table 'reports' ensured.
+2025-05-14 23:39:42 DEBUG app.models.database [database.initialize:141]: Table 'report_data' ensured.
+2025-05-14 23:39:42 DEBUG app.models.database [database.initialize:158]: Table 'users' ensured.
+2025-05-14 23:39:42 INFO app.models.database [database.initialize:161]: Database schema initialization successful.
+2025-05-14 23:39:42 INFO app [__init__.init_extensions:132]: Database initialized at: ga4_dashboard.db
+2025-05-14 23:39:42 INFO app [__init__.init_services:153]: Initializing application services...
+2025-05-14 23:39:42 INFO app.services [__init__.init_services:32]: Initializing application services...
+2025-05-14 23:39:42 INFO app.services.security_service [security_service._load_or_generate_fernet_key:110]: Fernet encryption key loaded successfully from: /Users/kevin/PycharmProjects/fromPsuedocode/app/../security/encryption_app.key
+2025-05-14 23:39:42 INFO app.services.security_service [security_service.__init__:72]: SecurityService initialized successfully.
+2025-05-14 23:39:42 INFO app.services [__init__.init_services:41]: Security service initialized
+2025-05-14 23:39:42 DEBUG app.services [__init__.init_services:46]: Authentication service initialized with database: <app.models.database.Database object at 0x10c083fb0>
+2025-05-14 23:39:42 INFO app.services [__init__.init_services:47]: Authentication service initialized
+2025-05-14 23:39:42 ERROR app.services.ga4_service [ga4_service._init_services:80]: Error initializing GA4 API services: Invalid control character at: line 5 column 46 (char 143)
+Traceback (most recent call last):
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/app/services/ga4_service.py", line 69, in _init_services
+    self._credentials = Credentials.from_service_account_file(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/.venv/lib/python3.12/site-packages/google/oauth2/service_account.py", line 260, in from_service_account_file
+    info, signer = _service_account_info.from_filename(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/.venv/lib/python3.12/site-packages/google/auth/_service_account_info.py", line 79, in from_filename
+    data = json.load(json_file)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/decoder.py", line 354, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Invalid control character at: line 5 column 46 (char 143)
+2025-05-14 23:39:42 ERROR app.services.ga4_service [ga4_service.__init__:57]: Failed to initialize GA4 Service: Invalid control character at: line 5 column 46 (char 143)
+Traceback (most recent call last):
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/app/services/ga4_service.py", line 54, in __init__
+    self._init_services()
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/app/services/ga4_service.py", line 69, in _init_services
+    self._credentials = Credentials.from_service_account_file(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/.venv/lib/python3.12/site-packages/google/oauth2/service_account.py", line 260, in from_service_account_file
+    info, signer = _service_account_info.from_filename(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kevin/PycharmProjects/fromPsuedocode/.venv/lib/python3.12/site-packages/google/auth/_service_account_info.py", line 79, in from_filename
+    data = json.load(json_file)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/decoder.py", line 354, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Invalid control character at: line 5 column 46 (char 143)
+2025-05-14 23:39:42 INFO app.services [__init__.init_services:54]: GA4 service initialized
+2025-05-14 23:39:42 INFO app.services.plugin_service [plugin_service.__init__:27]: Plugin Service initialized
+2025-05-14 23:39:42 INFO app.services [__init__.init_services:61]: Plugin service initialized
+2025-05-14 23:39:42 INFO app.services.report_service [report_service.__init__:51]: Report Service initialized
+2025-05-14 23:39:42 INFO app.services [__init__.init_services:66]: Report service initialized
+2025-05-14 23:39:42 INFO app.services [__init__.init_services:68]: All services initialized successfully
+2025-05-14 23:39:42 DEBUG app [__init__.init_services:166]: Attached security service to app as 'security_service'
+2025-05-14 23:39:42 DEBUG app [__init__.init_services:166]: Attached auth service to app as 'auth_service'
+2025-05-14 23:39:42 DEBUG app [__init__.init_services:166]: Attached ga4 service to app as 'ga4_service'
+2025-05-14 23:39:42 DEBUG app [__init__.init_services:166]: Attached plugin service to app as 'plugin_service'
+2025-05-14 23:39:42 DEBUG app [__init__.init_services:166]: Attached report service to app as 'report_service'
+2025-05-14 23:39:42 INFO app [__init__.init_services:168]: Service initialization completed successfully
+2025-05-14 23:39:42 INFO app [__init__.init_plugins:179]: Initializing and registering plugins...
+2025-05-14 23:39:42 INFO app.services.plugin_service [plugin_service.discover_plugins:56]: Discovered 2 plugin modules: ['app.plugins.base_plugin', 'app.plugins.engagement_metrics']
+2025-05-14 23:39:42 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: None (BasePlugin)
+2025-05-14 23:39:42 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: None (BasePlugin)
+2025-05-14 23:39:42 DEBUG app.services.plugin_service [plugin_service.register_plugins:80]: Registered plugin: engagement_metrics (EngagementMetricsPlugin)
+2025-05-14 23:39:42 INFO app.services.plugin_service [plugin_service.register_plugins:84]: Registered 2 plugins: [None, 'engagement_metrics']
+2025-05-14 23:39:42 INFO app [__init__.init_plugins:191]: Registered 2 plugins: [None, 'engagement_metrics']
+2025-05-14 23:39:42 INFO app [__init__.init_plugins:195]: Plugin initialization completed
+2025-05-14 23:39:42 INFO app [__init__.init_extensions:142]: Extensions initialization process completed.
+2025-05-14 23:39:42 INFO app [__init__.register_blueprints:205]: Registering application blueprints...
+2025-05-14 23:39:42 INFO app.controllers [__init__.init_controllers:25]: Initializing controllers...
+2025-05-14 23:39:42 INFO app.controllers [__init__.init_controllers:37]: Registered auth blueprint
+2025-05-14 23:39:42 INFO app.controllers [__init__.init_controllers:41]: Registered dashboard blueprint
+2025-05-14 23:39:42 INFO app.controllers [__init__.init_controllers:45]: Registered reports blueprint
+2025-05-14 23:39:42 INFO app.controllers [__init__.init_controllers:49]: Registered API blueprint
+2025-05-14 23:39:42 INFO app.controllers [__init__.init_controllers:53]: Registered admin blueprint
+2025-05-14 23:39:42 INFO app.controllers [__init__.init_controllers:55]: All controllers initialized successfully
+2025-05-14 23:39:42 INFO app [__init__.register_blueprints:213]: Blueprint registration completed successfully
+2025-05-14 23:39:42 INFO app [__init__.register_error_handlers:224]: Registering custom error handlers...
+2025-05-14 23:39:42 INFO app [__init__.register_error_handlers:230]: Custom error handlers registered.
+2025-05-14 23:39:42 INFO app [__init__.register_context_processors:241]: Registering context processors...
+2025-05-14 23:39:42 INFO app [__init__.register_context_processors:249]: Context processors registered.
+2025-05-14 23:39:42 INFO app [__init__.register_shell_context:260]: Registering shell context processor...
+2025-05-14 23:39:42 INFO app [__init__.register_shell_context:276]: Shell context processor registered.
+2025-05-14 23:39:42 INFO app [__init__.create_app:110]: GA4 Analytics Dashboard application instance created successfully with 'development' configuration.
+2025-05-14 23:39:42 INFO app [run.<module>:46]: Starting GA4 Analytics Dashboard application on http://127.0.0.1:5000
+2025-05-14 23:39:42 INFO app [run.<module>:47]: Application debug mode is: True
+2025-05-14 23:39:42 WARNING werkzeug [_internal._log:97]:  * Debugger is active!
+2025-05-14 23:39:42 INFO werkzeug [_internal._log:97]:  * Debugger PIN: 489-346-640
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/resource_tracker.py:254: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

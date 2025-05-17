@@ -57,6 +57,29 @@ This document provides detailed instructions for setting up and running the GA4 
 
 The database is automatically initialized when the application starts for the first time. It will create the necessary tables in the SQLite database specified in the configuration.
 
+## Creating Admin User
+
+Before accessing the application, you need to create an admin user:
+
+1. Use the provided command-line utility:
+   ```bash
+   python create_admin_cli.py <email> <password> [first_name] [last_name]
+   ```
+
+2. Example:
+   ```bash
+   python create_admin_cli.py admin@example.com SecureP@ss123 Admin User
+   ```
+
+3. Password requirements:
+   - Minimum 8 characters
+   - Must include uppercase letters
+   - Must include lowercase letters
+   - Must include numbers
+   - Must include special characters
+
+This admin user will have full access to the application and can create additional users as needed.
+
 ## Running the Application
 
 1. Start the development server:
@@ -68,7 +91,9 @@ The database is automatically initialized when the application starts for the fi
 
 2. Access the application at `http://127.0.0.1:5000` (or the configured host/port)
 
-3. Follow the on-screen instructions to authenticate with Google and start using the dashboard
+3. Log in with the admin user credentials you created in the previous step
+
+4. Follow the on-screen instructions to authenticate with Google and start using the dashboard
 
 ## Running Tests
 
@@ -81,6 +106,21 @@ Or run specific test files:
 ```bash
 pytest tests/unit/models/test_database.py
 ```
+
+## Troubleshooting
+
+### Login Issues
+- If you cannot log in, verify the user was created successfully
+- Check application logs for any authentication errors
+- Try recreating the admin user with a new password
+
+### Database Issues
+- If database tables aren't created automatically, check the application logs
+- Ensure the database path is writable by the application user
+
+### GA4 API Access
+- Verify your GA4 credentials path is correctly set in config
+- Ensure the service account has proper permissions in Google Analytics
 
 ## Deployment Considerations
 

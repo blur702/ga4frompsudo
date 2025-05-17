@@ -1,0 +1,18 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Server Error{% endblock %}
+
+{% block content %}
+<div class="container text-center py-5">
+    <div class="error-container">
+        <h1 class="display-1 text-danger">500</h1>
+        <h2 class="mb-4">Internal Server Error</h2>
+        <p class="lead mb-4">Something went wrong on our end. Our technical team has been notified.</p>
+        <p class="mb-4">
+            <strong>Error details:</strong> 
+            <code class="text-break">{{ error }}</code>
+        </p>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">Return to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

@@ -9,7 +9,8 @@ from flask import current_app
 
 from app.models.report import Report
 from app.models.report_data import ReportData
-from app.services import get_service
+# Import service functions but don't create circular imports
+# We'll use get_service through app.services later when needed
 
 # Check if ReportLab is available for PDF generation
 try:
@@ -100,6 +101,7 @@ class ReportService:
             parameters = json.loads(report.parameters) if report.parameters else {}
             
             # Use plugin service to get the right plugin for the report type
+            from app.services import get_service
             plugin_service = get_service('plugin')
             if not plugin_service:
                 logger.error("Plugin service not available")
@@ -117,6 +119,7 @@ class ReportService:
                     plugin_id = report.report_type  # Use report type as plugin ID
             
             # Process data using the appropriate plugin
+            # get_service imported locally above
             ga4_service = get_service('ga4')
             if not ga4_service or not ga4_service.is_available():
                 logger.error("GA4 service not available")

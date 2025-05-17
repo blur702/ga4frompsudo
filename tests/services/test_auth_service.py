@@ -1,4 +1,5 @@
 import os
+import time
 import unittest
 from unittest.mock import patch, MagicMock
 
@@ -7,6 +8,7 @@ from flask import Flask
 from app.services.security_service import SecurityService
 from app.services.auth_service import AuthService
 from app.models.user import User
+from app.models.database import Database
 
 
 class TestAuthService(unittest.TestCase):
@@ -19,6 +21,9 @@ class TestAuthService(unittest.TestCase):
         self.app.config['TESTING'] = True
         self.app.config['SESSION_DURATION'] = 3600
         self.app.config['TOKEN_EXPIRY'] = 86400
+        
+        # Create a mock database
+        self.mock_db = MagicMock(spec=Database)
         
         # Create a test security service
         self.security_service = SecurityService(
@@ -36,7 +41,7 @@ class TestAuthService(unittest.TestCase):
         
         # Create the auth service
         with self.app.app_context():
-            self.auth_service = AuthService(self.security_service)
+            self.auth_service = AuthService(self.security_service, self.mock_db)
 
     @patch('app.models.user.User.find_by_email')
     def test_login_success(self, mock_find_by_email):
@@ -55,6 +60,9 @@ class TestAuthService(unittest.TestCase):
                     self.assertIsNone(error)
                     self.assertIn('user_id', session)
                     self.assertEqual(session['user_id'], 1)
+                    
+                    # Verify that find_by_email was called with the database and email
+                    mock_find_by_email.assert_called_once_with(self.mock_db, 'test@example.com')
 
     @patch('app.models.user.User.find_by_email')
     def test_login_invalid_email(self, mock_find_by_email):
@@ -69,6 +77,9 @@ class TestAuthService(unittest.TestCase):
             self.assertFalse(success)
             self.assertIsNone(user)
             self.assertEqual(error, "Invalid email or password")
+            
+            # Verify that find_by_email was called with the database and email
+            mock_find_by_email.assert_called_once_with(self.mock_db, 'nonexistent@example.com')
 
     @patch('app.models.user.User.find_by_email')
     def test_login_invalid_password(self, mock_find_by_email):
@@ -113,11 +124,14 @@ class TestAuthService(unittest.TestCase):
             with self.app.test_client() as client:
                 with client.session_transaction() as session:
                     session['user_id'] = 1
-                    session['last_active'] = int(self.auth_service._create_session(self.mock_user))
+                    session['last_active'] = int(time.time())  # Fixed from previous implementation
                 
                 # Test outside the session transaction
                 user = self.auth_service.get_current_user()
                 self.assertEqual(user, self.mock_user)
+                
+                # Verify that find_by_id was called with the database and user ID
+                mock_find_by_id.assert_called_with(self.mock_db, 1)
 
     def test_get_current_user_no_session(self):
         """Test getting current user with no session."""
@@ -156,7 +170,7 @@ class TestAuthService(unittest.TestCase):
             with self.app.test_client() as client:
                 with client.session_transaction() as session:
                     session['user_id'] = 1
-                    session['last_active'] = int(self.auth_service._create_session(admin_user))
+                    session['last_active'] = int(time.time())
                 
                 # Test requiring admin role
                 user = self.auth_service.require_role('admin')
@@ -173,7 +187,7 @@ class TestAuthService(unittest.TestCase):
             with self.app.test_client() as client:
                 with client.session_transaction() as session:
                     session['user_id'] = 1
-                    session['last_active'] = int(self.auth_service._create_session(self.mock_user))
+                    session['last_active'] = int(time.time())
                 
                 # Test requiring admin role
                 user = self.auth_service.require_role('admin')

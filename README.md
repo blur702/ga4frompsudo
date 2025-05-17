@@ -86,12 +86,25 @@ coverage report
 python generate_key.py
 ```
 
-2. (Optional) Create a service account in Google Cloud Console for GA4 access:
+2. Create an admin user:
+
+```bash
+python create_admin_cli.py kevin.althaus@mail.house.gov password123 Kevin Althaus
+```
+
+3. Log in to the admin interface to configure GA4 credentials:
+   - Navigate to http://127.0.0.1:5000/auth/login
+   - Log in as kevin.althaus@mail.house.gov (passwordless login is enabled for admin users)
+   - Go to Admin > GA4 Configuration
+   - Paste your GA4 service account credentials JSON
+
+4. To get GA4 service account credentials:
+   - Create a service account in Google Cloud Console
    - Enable the Google Analytics Data API
    - Grant the service account appropriate access to your GA4 properties
-   - Download the key file and save as `keys/ga4-service-account.json`
+   - Create and download a JSON key
 
-3. Create a `.env` file based on `.env.example` with your configuration settings
+5. Create a `.env` file based on `.env.example` with your configuration settings
 
 ### Starting the Development Server
 
@@ -142,11 +155,15 @@ curl -X POST \
 - ✅ Plugin system architecture
 - ✅ Sample engagement metrics plugin
 - ✅ Date and security utilities
+- ✅ Admin interface for application configuration
+- ✅ Passwordless admin login for development
+- ✅ UI for uploading GA4 credentials
 
 ### In Progress
 - 🔄 Controllers and routing
 - 🔄 Template and view structure
 - 🔄 Report generation service
+- 🔄 User management interface
 
 ### Planned
 - 📅 API routes for plugin integration
