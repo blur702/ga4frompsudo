@@ -25,8 +25,8 @@ class BaseModel(ABC):
                         It's typically None for new instances until saved.
     """
 
-    # Subclasses should define their table name.
-    # TABLE_NAME = None # Example: 'properties', 'websites', etc.
+    # Subclasses should define their table name as a class attribute.
+    # TABLE_NAME = 'table_name' # Example: 'properties', 'websites', etc.
 
     def __init__(self, database, id_val=None):
         """
@@ -43,11 +43,8 @@ class BaseModel(ABC):
         self.database = database
         self.id = id_val  # Corresponds to the 'id' INTEGER PRIMARY KEY AUTOINCREMENT column
 
-    @property
-    @abstractmethod
-    def TABLE_NAME(self):
-        """The name of the database table for this model."""
-        pass
+    # Subclasses should define their table name as a class attribute.
+    # Example: TABLE_NAME = 'properties'
 
     @abstractmethod
     def _to_dict(self):
@@ -169,6 +166,30 @@ class BaseModel(ABC):
             return None
 
     @classmethod
+    def get_by_field(cls, database_instance, field_name, field_value):
+        """
+        Finds a model instance by a specific field.
+
+        Args:
+            database_instance (Database): The database instance to use.
+            field_name (str): The name of the field to search by.
+            field_value: The value to search for.
+
+        Returns:
+            An instance of the subclass model or None if not found.
+        """
+        query = f"SELECT * FROM {cls.TABLE_NAME} WHERE {field_name} = ?"
+        try:
+            logger.debug(f"Finding record by {field_name}={field_value} in table {cls.TABLE_NAME}.")
+            row = database_instance.execute(query, (field_value,), fetchone=True)
+            if row:
+                return cls._from_db_row(row, database_instance)
+            return None
+        except Exception as e:
+            logger.error(f"Error finding record by {field_name}={field_value} in table {cls.TABLE_NAME}: {e}", exc_info=True)
+            return None
+    
+    @classmethod
     def find_all(cls, database_instance, filters=None, order_by=None, limit=None, offset=None):
         """
         Finds all records in the model's table, with optional filters, ordering, and pagination.
@@ -195,7 +216,9 @@ class BaseModel(ABC):
             conditions = []
             for key, value in filters.items():
                 conditions.append(f"{key} = ?")  # Basic equality
-                params.append(value)
+                # Ensure value is properly converted to a compatible type for SQLite
+                # SQLite accepts: None, int, float, str, and bytes
+                params.append(value)  # SQLite driver handles basic Python types properly
             if conditions:
                 query += " WHERE " + " AND ".join(conditions)
 
@@ -207,13 +230,15 @@ class BaseModel(ABC):
 
         if limit is not None:
             query += " LIMIT ?"
-            params.append(limit)
+            # Ensure limit is an integer
+            params.append(int(limit) if limit is not None else None)
 
         if offset is not None:
             if limit is None:  # SQLite requires LIMIT with OFFSET
                 query += " LIMIT -1"  # Effectively no limit, but required by SQLite for OFFSET
             query += " OFFSET ?"
-            params.append(offset)
+            # Ensure offset is an integer
+            params.append(int(offset) if offset is not None else None)
 
         try:
             logger.debug(f"Finding all records in table {cls.TABLE_NAME} with query: {query}, params: {params}")
@@ -227,10 +252,15 @@ class BaseModel(ABC):
 
     # Helper for subclasses to manage datetime and date fields consistently
     def _datetime_to_iso(self, dt_obj):
-        """Formats a datetime object to an ISO 8601 string for database storage."""
-        if dt_obj:
-            return dt_obj.isoformat()
-        return None
+        """
+        Formats a datetime object to an ISO 8601 string for database storage.
+        If dt_obj is already a string, returns it as is.
+        """
+        if dt_obj is None:
+            return None
+        if isinstance(dt_obj, str):
+            return dt_obj
+        return dt_obj.isoformat()
 
     def _iso_to_datetime(self, dt_str):
         """Parses an ISO 8601 string from the database into a datetime object."""
