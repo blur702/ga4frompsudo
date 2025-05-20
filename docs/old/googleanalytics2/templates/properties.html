@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Properties - GA4 Dashboard{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Properties</h1>
+            <p class="text-gray-600">Manage your Google Analytics 4 properties</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+            <form action="{{ url_for('sync_properties') }}" method="post">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Sync Properties
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    {% if properties %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 data-table">
+                <thead>
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property ID</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Website URL</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Synced</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Global Reports</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for property in properties %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ property.display_name }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500">{{ property.ga_property_id }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if property.website_url %}
+                                    <a href="{{ property.website_url }}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800">{{ property.website_url }}</a>
+                                {% else %}
+                                    <span class="text-sm text-gray-500">Not available</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {% if property.last_synced %}
+                                    {{ property.last_synced.strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <button 
+                                    onclick="togglePropertyExclusion({{ property.id }}, this)" 
+                                    class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white {% if property.exclude_from_global_reports %}bg-green-600 hover:bg-green-700{% else %}bg-red-600 hover:bg-red-700{% endif %} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                    {% if property.exclude_from_global_reports %}
+                                        Include
+                                    {% else %}
+                                        Exclude
+                                    {% endif %}
+                                </button>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <form action="{{ url_for('update_property_metadata', property_id=property.id) }}" method="post" class="inline">
+                                    <button type="submit" class="text-blue-600 hover:text-blue-900">Update Metadata</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <p class="mt-2 text-sm text-gray-600">No properties found</p>
+            <p class="text-sm text-gray-500">Click the "Sync Properties" button to fetch your GA4 properties</p>
+        </div>
+    {% endif %}
+</div>
+
+<div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">About GA4 Properties</h2>
+    <div class="prose max-w-none">
+        <p>Google Analytics 4 properties are the foundation of your analytics data. Each property represents a website or app that you're tracking with Google Analytics.</p>
+        
+        <h3 class="text-md font-medium mt-4">Managing Properties</h3>
+        <ul class="list-disc pl-5 space-y-2">
+            <li><strong>Sync Properties</strong>: Fetch the latest properties from your Google Analytics account.</li>
+            <li><strong>Global Reports</strong>: Control whether a property is included in global reports that aggregate data across multiple properties.</li>
+            <li><strong>Update Metadata</strong>: Fetch the latest metrics and dimensions definitions for a property.</li>
+        </ul>
+        
+        <h3 class="text-md font-medium mt-4">Property Information</h3>
+        <ul class="list-disc pl-5 space-y-2">
+            <li><strong>Property ID</strong>: The unique identifier for the GA4 property.</li>
+            <li><strong>Website URL</strong>: The URL of the website associated with the property.</li>
+            <li><strong>Last Synced</strong>: The last time the property information was updated.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Properties page loaded');
+    });
+</script>
+{% endblock %}

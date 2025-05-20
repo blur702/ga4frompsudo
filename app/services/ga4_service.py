@@ -6,14 +6,17 @@ from typing import Optional, Dict, Any, List, Tuple, Union
 
 from flask import current_app
 from google.oauth2.service_account import Credentials
+from google.oauth2.credentials import Credentials as OAuth2Credentials
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 
 from app.utils.date_utils import date_range_to_ga4_api_format, parse_date_range
+from app.models.app_settings import AppSettings
 
 # Check if Google Analytics API is available
 try:
     import google.oauth2.service_account
+    import google.oauth2.credentials
     import googleapiclient.discovery
     import googleapiclient.errors
     GA4_AVAILABLE = True
@@ -28,61 +31,166 @@ class GA4Service:
     Service for interfacing with Google Analytics 4 API.
     
     This service provides methods to:
-    - Authenticate with GA4 using service account credentials
+    - Authenticate with GA4 using service account or OAuth2 credentials
     - Fetch properties and streams
     - Run various analytics reports
     - Extract and format metrics and dimensions
     """
-    def __init__(self, credentials_path: Optional[str] = None):
+    def __init__(self, credentials_path: Optional[str] = None, auth_method: Optional[str] = None):
         """
         Initialize the GA4 Service.
         
         Args:
             credentials_path: Path to the service account credentials JSON file.
                              If None, will use the path from app config.
+            auth_method: Authentication method ('service_account' or 'oauth2').
+                        If None, will check app settings or default to 'service_account'.
         """
-        self.credentials_path = credentials_path or current_app.config.get('GA4_CREDENTIALS_PATH')
+        # Handle non-Flask contexts
+        if credentials_path:
+            self.credentials_path = credentials_path
+        else:
+            try:
+                from flask import current_app
+                self.credentials_path = current_app.config.get('GA4_CREDENTIALS_PATH')
+            except RuntimeError:
+                # Not in Flask context, use default path
+                self.credentials_path = 'credentials/ga4_credentials.json'
         self.scopes = ['https://www.googleapis.com/auth/analytics.readonly']
         self._analytics = None
-        self._admin = None
+        self._admin_service = None
         self._data = None
         self._credentials = None
         
-        # Initialize the service if GA4 is available
-        if GA4_AVAILABLE and self.credentials_path and os.path.exists(self.credentials_path):
+        # Determine authentication method
+        if auth_method is None:
+            # Try to get from database settings
             try:
-                self._init_services()
-                logger.info("GA4 Service initialized successfully")
-            except Exception as e:
-                logger.error(f"Failed to initialize GA4 Service: {str(e)}", exc_info=True)
+                from app.models.database import Database
+                db = Database()
+                self.auth_method = AppSettings.get_setting(db, 'ga4_auth_method', 'service_account')
+            except:
+                self.auth_method = 'service_account'
         else:
-            logger.warning("GA4 Service not fully initialized: either GA4 libraries not available " 
-                          f"or credentials path does not exist: {self.credentials_path}")
+            self.auth_method = auth_method
+        
+        # Initialize the service if GA4 is available
+        if GA4_AVAILABLE:
+            if self.auth_method == 'service_account' and self.credentials_path and os.path.exists(self.credentials_path):
+                try:
+                    self._init_services()
+                    logger.info("GA4 Service initialized successfully with service account")
+                except Exception as e:
+                    logger.error(f"Failed to initialize GA4 Service: {str(e)}", exc_info=True)
+            elif self.auth_method == 'oauth2':
+                # OAuth2 initialization - try to get credentials from database
+                try:
+                    from flask import current_app
+                    from app.models.app_settings import AppSettings
+                    db = current_app.database
+                    
+                    access_token = AppSettings.get_setting(db, 'oauth2_access_token')
+                    refresh_token = AppSettings.get_setting(db, 'oauth2_refresh_token')
+                    client_id = AppSettings.get_setting(db, 'oauth2_client_id')
+                    client_secret = AppSettings.get_setting(db, 'oauth2_client_secret')
+                    
+                    if access_token and refresh_token and client_id and client_secret:
+                        self._init_oauth2_from_tokens({
+                            'access_token': access_token,
+                            'refresh_token': refresh_token,
+                            'client_id': client_id,
+                            'client_secret': client_secret
+                        })
+                        logger.info("GA4 Service initialized successfully with OAuth2")
+                    else:
+                        logger.warning("GA4 Service configured for OAuth2 but tokens not found")
+                except Exception as e:
+                    logger.warning(f"GA4 Service OAuth2 initialization deferred: {e}")
+            else:
+                logger.warning("GA4 Service not fully initialized: either GA4 libraries not available " 
+                              f"or credentials path does not exist: {self.credentials_path}")
     
     def _init_services(self) -> None:
-        """Initialize the GA4 API services using service account credentials."""
+        """Initialize the GA4 API services using appropriate credentials."""
         if not GA4_AVAILABLE:
             logger.warning("Cannot initialize GA4 services: Google Analytics libraries not available")
             return
             
         try:
-            self._credentials = Credentials.from_service_account_file(
-                self.credentials_path, scopes=self.scopes
-            )
+            if self.auth_method == 'service_account':
+                self._credentials = Credentials.from_service_account_file(
+                    self.credentials_path, scopes=self.scopes
+                )
+            elif self.auth_method == 'oauth2':
+                # OAuth2 credentials should already be initialized
+                if not self._credentials:
+                    raise RuntimeError("OAuth2 credentials not initialized. Call _init_oauth2_from_tokens first")
             
             # Initialize the required API services
+            # Use v1alpha for admin API as it has better property listing support
+            self._admin_service = build('analyticsadmin', 'v1alpha', credentials=self._credentials)
             self._analytics = build('analyticsadmin', 'v1beta', credentials=self._credentials)
-            self._admin = self._analytics.accountSummaries()
             self._data = build('analyticsdata', 'v1beta', credentials=self._credentials)
             
             logger.debug("GA4 API services initialized successfully")
         except Exception as e:
             logger.error(f"Error initializing GA4 API services: {str(e)}", exc_info=True)
+            self._admin_service = None
             self._analytics = None
-            self._admin = None
             self._data = None
             self._credentials = None
             raise
+    
+    def _init_oauth2_from_tokens(self, token_data: Dict[str, Any]) -> None:
+        """
+        Initialize OAuth2 credentials from stored tokens.
+        
+        Args:
+            token_data: Dictionary containing OAuth2 token information
+        """
+        if not GA4_AVAILABLE:
+            logger.warning("Cannot initialize OAuth2 credentials: Google Analytics libraries not available")
+            return
+            
+        try:
+            # Create OAuth2 credentials
+            self._credentials = OAuth2Credentials(
+                token=token_data.get('access_token'),
+                refresh_token=token_data.get('refresh_token'),
+                token_uri='https://oauth2.googleapis.com/token',
+                client_id=token_data.get('client_id'),
+                client_secret=token_data.get('client_secret'),
+                scopes=self.scopes
+            )
+            
+            # Initialize the services with OAuth2 credentials
+            self._init_services()
+            
+            logger.debug("GA4 API services initialized with OAuth2 credentials")
+        except Exception as e:
+            logger.error(f"Error initializing OAuth2 credentials: {str(e)}", exc_info=True)
+            raise
+    
+    def init_oauth2_credentials(self, token_data: Dict[str, Any]) -> None:
+        """
+        Initialize OAuth2 credentials from token data (legacy method for compatibility).
+        
+        Args:
+            token_data: Dictionary containing OAuth2 token information
+        """
+        # Add client ID and secret if not in token_data
+        if not token_data.get('client_id') or not token_data.get('client_secret'):
+            try:
+                from flask import current_app
+                from app.models.app_settings import AppSettings
+                db = current_app.database
+                
+                token_data['client_id'] = AppSettings.get_setting(db, 'oauth2_client_id')
+                token_data['client_secret'] = AppSettings.get_setting(db, 'oauth2_client_secret')
+            except Exception as e:
+                logger.warning(f"Could not get OAuth2 client config: {e}")
+        
+        self._init_oauth2_from_tokens(token_data)
     
     def is_available(self) -> bool:
         """
@@ -92,6 +200,100 @@ class GA4Service:
             True if the service is available, False otherwise
         """
         return GA4_AVAILABLE and self._analytics is not None and self._data is not None
+    
+    def list_all_properties_detailed(self) -> List[Dict[str, Any]]:
+        """
+        List all GA4 properties with detailed information including URLs.
+        This method is similar to the old implementation in ga_api.py.
+        
+        Returns:
+            List of property dictionaries with detailed information
+        """
+        if not self.is_available():
+            logger.warning("Cannot list properties: GA4 service not available")
+            return []
+            
+        try:
+            properties = []
+            page_token = None
+            
+            # Use the v1alpha admin service to list account summaries
+            while True:
+                request = self._admin_service.accountSummaries().list()
+                if page_token:
+                    request = self._admin_service.accountSummaries().list(pageToken=page_token)
+                    
+                response = request.execute()
+                account_summaries = response.get('accountSummaries', [])
+                
+                for account in account_summaries:
+                    account_id = account.get('account', '')
+                    account_name = account.get('displayName', '')
+                    property_summaries = account.get('propertySummaries', [])
+                    
+                    logger.debug(f"Processing account: {account_name} ({account_id})")
+                    
+                    for property_summary in property_summaries:
+                        property_resource = property_summary.get('property', '')
+                        property_id = property_resource.split('/')[-1] if property_resource else ''
+                        
+                        # Initialize property data
+                        property_data = {
+                            'property_id': property_id,
+                            'property': property_resource,  # Full resource name
+                            'display_name': property_summary.get('displayName', ''),
+                            'account': account_id,
+                            'account_name': account_name,
+                            'website_url': None,
+                            'createTime': None,
+                            'updateTime': None
+                        }
+                        
+                        # Get website URL from data streams
+                        try:
+                            # List data streams using v1alpha API
+                            streams_request = self._admin_service.properties().dataStreams().list(
+                                parent=property_resource
+                            )
+                            streams_response = streams_request.execute()
+                            
+                            streams = streams_response.get('dataStreams', [])
+                            for stream in streams:
+                                # Check if this is a web stream
+                                if stream.get('type') == 'WEB_DATA_STREAM':
+                                    web_data = stream.get('webStreamData', {})
+                                    property_data['website_url'] = web_data.get('defaultUri')
+                                    break
+                                    
+                        except Exception as e:
+                            logger.warning(f"Error getting data streams for property {property_resource}: {e}")
+                        
+                        # Try to get additional property details
+                        try:
+                            property_details = self._admin_service.properties().get(
+                                name=property_resource
+                            ).execute()
+                            
+                            if property_details:
+                                property_data['createTime'] = property_details.get('createTime')
+                                property_data['updateTime'] = property_details.get('updateTime')
+                                property_data['display_name'] = property_details.get('displayName', property_data['display_name'])
+                        except Exception as e:
+                            logger.warning(f"Could not get property details for {property_resource}: {e}")
+                        
+                        properties.append(property_data)
+                
+                # Check for next page
+                page_token = response.get('nextPageToken')
+                if not page_token:
+                    break
+                    
+            logger.info(f"Found {len(properties)} GA4 properties with details")
+            return properties
+            
+        except Exception as e:
+            logger.error(f"Error listing GA4 properties: {str(e)}", exc_info=True)
+            return []
     
     def list_account_summaries(self) -> List[Dict[str, Any]]:
         """
@@ -105,8 +307,23 @@ class GA4Service:
             return []
             
         try:
-            result = self._admin.list().execute()
-            return result.get('accountSummaries', [])
+            # Use v1alpha admin service for better property listing
+            account_summaries = []
+            page_token = None
+            
+            while True:
+                if page_token:
+                    response = self._admin_service.accountSummaries().list(pageToken=page_token).execute()
+                else:
+                    response = self._admin_service.accountSummaries().list().execute()
+                
+                account_summaries.extend(response.get('accountSummaries', []))
+                
+                page_token = response.get('nextPageToken')
+                if not page_token:
+                    break
+                    
+            return account_summaries
         except HttpError as e:
             logger.error(f"Error listing GA4 account summaries: {str(e)}", exc_info=True)
             return []
@@ -119,7 +336,7 @@ class GA4Service:
             account_id: Optional account ID to filter properties by
             
         Returns:
-            List of property objects
+            List of property objects with additional data stream information
         """
         if not self.is_available():
             logger.warning("Cannot list properties: GA4 service not available")
@@ -140,7 +357,26 @@ class GA4Service:
             
             # Extract properties from account summaries
             for summary in account_summaries:
-                properties.extend(summary.get('propertySummaries', []))
+                property_summaries = summary.get('propertySummaries', [])
+                
+                for property_summary in property_summaries:
+                    property_obj = property_summary.copy()
+                    
+                    # Try to get additional information from data streams
+                    property_id = property_summary.get('property', '').split('/')[-1]
+                    if property_id:
+                        try:
+                            # Get data streams to find website URL
+                            streams = self.list_streams(property_id)
+                            for stream in streams:
+                                # Check for web stream data
+                                if stream.get('type') == 'WEB_DATA_STREAM' and stream.get('webStreamData'):
+                                    property_obj['website_url'] = stream['webStreamData'].get('defaultUri')
+                                    break
+                        except Exception as e:
+                            logger.warning(f"Could not get streams for property {property_id}: {e}")
+                    
+                    properties.append(property_obj)
                 
             logger.debug(f"Found {len(properties)} GA4 properties")
             return properties
@@ -213,257 +449,174 @@ class GA4Service:
             logger.error(f"Error getting stream {stream_id} for property {property_id}: {str(e)}", exc_info=True)
             return None
     
-    def run_report(self, 
-                   property_id: str,
-                   start_date: Union[str, datetime],
-                   end_date: Union[str, datetime],
-                   metrics: List[str],
-                   dimensions: Optional[List[str]] = None,
-                   filters: Optional[Dict[str, Any]] = None,
-                   limit: int = 10000) -> Dict[str, Any]:
+    def run_report(self, property_id: str, metrics: List[str], dimensions: List[str] = None,
+                   date_range: str = "last_30_days", limit: int = 100) -> Dict[str, Any]:
         """
-        Run a GA4 report with the specified parameters.
+        Run a report for a specific GA4 property.
         
         Args:
             property_id: The GA4 property ID
-            start_date: Start date (YYYY-MM-DD or datetime)
-            end_date: End date (YYYY-MM-DD or datetime)
-            metrics: List of metric names to include
-            dimensions: List of dimension names to include
-            filters: Dictionary of dimension/metric filters
+            metrics: List of metric names (e.g., ['activeUsers', 'screenPageViews'])
+            dimensions: List of dimension names (e.g., ['pagePath', 'country'])
+            date_range: Date range string or custom range
             limit: Maximum number of rows to return
             
         Returns:
-            Dictionary containing the report results
+            Report response from the API
         """
         if not self.is_available():
             logger.warning("Cannot run report: GA4 service not available")
-            return {'rows': [], 'metadata': {'status': 'error', 'message': 'GA4 service not available'}}
+            return {}
             
         try:
-            # Format dates for GA4
-            # Convert datetime objects to strings if needed
-            if isinstance(start_date, datetime):
-                start_date = start_date.strftime('%Y-%m-%d')
-            if isinstance(end_date, datetime):
-                end_date = end_date.strftime('%Y-%m-%d')
-                
-            # Convert to GA4 API format
-            date_range = date_range_to_ga4_api_format(start_date, end_date)
-            start_date_str = date_range['startDate']
-            end_date_str = date_range['endDate']
+            # Convert date range to API format
+            start_date, end_date = parse_date_range(date_range)
+            date_ranges = [date_range_to_ga4_api_format(start_date, end_date)]
             
-            # Prepare metrics and dimensions
-            metric_params = [{'name': m} for m in metrics]
-            dimension_params = [{'name': d} for d in (dimensions or [])]
+            # Build metrics list
+            metrics_list = [{'name': metric} for metric in metrics]
             
-            # Prepare report request
-            request = {
-                'dateRanges': [{'startDate': start_date_str, 'endDate': end_date_str}],
-                'metrics': metric_params,
-                'dimensions': dimension_params,
+            # Build dimensions list if provided
+            dimensions_list = []
+            if dimensions:
+                dimensions_list = [{'name': dimension} for dimension in dimensions]
+            
+            # Create the report request
+            request_body = {
+                'dateRanges': date_ranges,
+                'metrics': metrics_list,
                 'limit': limit
             }
             
-            # Add dimension filter if provided
-            if filters:
-                request['dimensionFilter'] = filters
+            if dimensions_list:
+                request_body['dimensions'] = dimensions_list
             
-            # Execute the report
-            property_path = f"properties/{property_id}"
+            # Run the report
             response = self._data.properties().runReport(
-                property=property_path,
-                body=request
+                property=f"properties/{property_id}",
+                body=request_body
             ).execute()
             
-            logger.debug(f"Successfully ran GA4 report for property {property_id} with {len(response.get('rows', []))} rows")
+            logger.debug(f"Report executed successfully for property {property_id}")
             return response
-        except Exception as e:
-            logger.error(f"Error running GA4 report for property {property_id}: {str(e)}", exc_info=True)
-            return {'rows': [], 'metadata': {'status': 'error', 'message': str(e)}}
+            
+        except HttpError as e:
+            logger.error(f"Error running report for property {property_id}: {str(e)}", exc_info=True)
+            return {}
     
-    def get_traffic_report(self,
-                           property_id: str,
-                           date_range: str,
-                           metrics: Optional[List[str]] = None,
-                           dimensions: Optional[List[str]] = None) -> Dict[str, Any]:
+    def get_realtime_report(self, property_id: str, metrics: List[str], dimensions: List[str] = None,
+                           limit: int = 100) -> Dict[str, Any]:
         """
-        Get a traffic analysis report for a property.
+        Get real-time data for a GA4 property.
         
         Args:
             property_id: The GA4 property ID
-            date_range: Date range string (e.g., 'last7days', '30daysAgo')
-            metrics: List of traffic metrics to include
-            dimensions: List of dimensions to include
+            metrics: List of metric names
+            dimensions: List of dimension names
+            limit: Maximum number of rows to return
             
         Returns:
-            Dictionary containing the report results
-        """
-        # Default metrics and dimensions if not provided
-        if metrics is None:
-            metrics = [
-                'totalUsers', 
-                'newUsers', 
-                'sessions', 
-                'screenPageViews',
-                'averageSessionDuration'
-            ]
-            
-        if dimensions is None:
-            dimensions = ['date']
-            
-        # Parse date range
-        start_date, end_date = parse_date_range(date_range)
-        
-        # Run the report
-        return self.run_report(
-            property_id=property_id,
-            start_date=start_date,
-            end_date=end_date,
-            metrics=metrics,
-            dimensions=dimensions
-        )
-    
-    def get_engagement_report(self,
-                              property_id: str,
-                              date_range: str) -> Dict[str, Any]:
-        """
-        Get an engagement report for a property.
-        
-        Args:
-            property_id: The GA4 property ID
-            date_range: Date range string (e.g., 'last7days', '30daysAgo')
-            
-        Returns:
-            Dictionary containing the report results
-        """
-        # Define metrics and dimensions for engagement report
-        metrics = [
-            'engagementRate',
-            'userEngagementDuration',
-            'averageSessionDuration',
-            'bounceRate',
-            'screenPageViewsPerSession'
-        ]
-        
-        dimensions = ['date']
-        
-        # Parse date range
-        start_date, end_date = parse_date_range(date_range)
-        
-        # Run the report
-        return self.run_report(
-            property_id=property_id,
-            start_date=start_date,
-            end_date=end_date,
-            metrics=metrics,
-            dimensions=dimensions
-        )
-    
-    def get_page_analysis_report(self,
-                                 property_id: str,
-                                 date_range: str,
-                                 limit: int = 20) -> Dict[str, Any]:
-        """
-        Get a page analysis report for a property.
-        
-        Args:
-            property_id: The GA4 property ID
-            date_range: Date range string (e.g., 'last7days', '30daysAgo')
-            limit: Maximum number of pages to include
-            
-        Returns:
-            Dictionary containing the report results
-        """
-        # Define metrics and dimensions for page analysis
-        metrics = [
-            'screenPageViews',
-            'averageSessionDuration',
-            'bounceRate',
-            'engagementRate'
-        ]
-        
-        dimensions = ['pagePath']
-        
-        # Parse date range
-        start_date, end_date = parse_date_range(date_range)
-        
-        # Run the report
-        return self.run_report(
-            property_id=property_id,
-            start_date=start_date,
-            end_date=end_date,
-            metrics=metrics,
-            dimensions=dimensions,
-            limit=limit
-        )
-    
-    def format_report_data(self, report: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """
-        Format raw GA4 report data into a more usable structure.
-        
-        Args:
-            report: Raw GA4 report data
-            
-        Returns:
-            List of formatted data rows
-        """
-        if not report or 'rows' not in report:
-            return []
-            
-        formatted_data = []
-        
-        # Extract dimension and metric headers
-        dimension_headers = [h.get('name') for h in report.get('dimensionHeaders', [])]
-        metric_headers = [h.get('name') for h in report.get('metricHeaders', [])]
-        
-        # Process each row
-        for row in report.get('rows', []):
-            data_row = {}
-            
-            # Add dimensions
-            for i, dim in enumerate(row.get('dimensionValues', [])):
-                if i < len(dimension_headers):
-                    data_row[dimension_headers[i]] = dim.get('value')
-            
-            # Add metrics
-            for i, metric in enumerate(row.get('metricValues', [])):
-                if i < len(metric_headers):
-                    data_row[metric_headers[i]] = metric.get('value')
-            
-            formatted_data.append(data_row)
-        
-        return formatted_data
-    
-    def get_realtime_users(self, property_id: str) -> int:
-        """
-        Get the current number of active users for a property.
-        
-        Args:
-            property_id: The GA4 property ID
-            
-        Returns:
-            Number of active users, or 0 if an error occurs
+            Real-time report response
         """
         if not self.is_available():
-            logger.warning("Cannot get realtime users: GA4 service not available")
-            return 0
+            logger.warning("Cannot get realtime report: GA4 service not available")
+            return {}
             
         try:
-            # Run a realtime report with activeUsers metric
-            property_path = f"properties/{property_id}"
+            # Build metrics and dimensions
+            metrics_list = [{'name': metric} for metric in metrics]
+            dimensions_list = [{'name': dimension} for dimension in dimensions] if dimensions else []
+            
+            # Create the request body
+            request_body = {
+                'metrics': metrics_list,
+                'limit': limit
+            }
+            
+            if dimensions_list:
+                request_body['dimensions'] = dimensions_list
+            
+            # Run the realtime report
             response = self._data.properties().runRealtimeReport(
-                property=property_path,
-                body={
-                    'metrics': [{'name': 'activeUsers'}]
-                }
+                property=f"properties/{property_id}",
+                body=request_body
             ).execute()
             
-            # Extract active users count
-            if 'rows' in response and len(response['rows']) > 0:
-                return int(response['rows'][0]['metricValues'][0]['value'])
+            logger.debug(f"Realtime report executed successfully for property {property_id}")
+            return response
             
-            return 0
-        except Exception as e:
-            logger.error(f"Error getting realtime users for property {property_id}: {str(e)}", exc_info=True)
-            return 0
+        except HttpError as e:
+            logger.error(f"Error getting realtime report for property {property_id}: {str(e)}", exc_info=True)
+            return {}
+    
+    def batch_run_reports(self, property_id: str, requests: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Run multiple reports in a single batch request.
+        
+        Args:
+            property_id: The GA4 property ID
+            requests: List of report request configurations
+            
+        Returns:
+            List of report responses
+        """
+        if not self.is_available():
+            logger.warning("Cannot batch run reports: GA4 service not available")
+            return []
+            
+        try:
+            # Convert each request to the proper format
+            formatted_requests = []
+            for request in requests:
+                date_range = request.get('date_range', 'last_30_days')
+                start_date, end_date = parse_date_range(date_range)
+                
+                formatted_request = {
+                    'dateRanges': [date_range_to_ga4_api_format(start_date, end_date)],
+                    'metrics': [{'name': metric} for metric in request.get('metrics', [])],
+                    'limit': request.get('limit', 100)
+                }
+                
+                if 'dimensions' in request:
+                    formatted_request['dimensions'] = [{'name': dim} for dim in request['dimensions']]
+                
+                formatted_requests.append(formatted_request)
+            
+            # Run the batch report
+            response = self._data.properties().batchRunReports(
+                property=f"properties/{property_id}",
+                body={'requests': formatted_requests}
+            ).execute()
+            
+            logger.debug(f"Batch report executed successfully for property {property_id}")
+            return response.get('reports', [])
+            
+        except HttpError as e:
+            logger.error(f"Error running batch reports for property {property_id}: {str(e)}", exc_info=True)
+            return []
+    
+    def get_metadata(self, property_id: str) -> Dict[str, Any]:
+        """
+        Get metadata about available metrics and dimensions for a property.
+        
+        Args:
+            property_id: The GA4 property ID
+            
+        Returns:
+            Metadata response containing available metrics and dimensions
+        """
+        if not self.is_available():
+            logger.warning("Cannot get metadata: GA4 service not available")
+            return {}
+            
+        try:
+            response = self._data.properties().getMetadata(
+                name=f"properties/{property_id}/metadata"
+            ).execute()
+            
+            logger.debug(f"Metadata retrieved successfully for property {property_id}")
+            return response
+            
+        except HttpError as e:
+            logger.error(f"Error getting metadata for property {property_id}: {str(e)}", exc_info=True)
+            return {}

@@ -29,6 +29,19 @@
         content: " *";
         color: red;
     }
+    .auth-method-section {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        background-color: #f8f9fa;
+    }
+    .auth-method-option {
+        margin-bottom: 1rem;
+    }
+    .auth-method-option:last-child {
+        margin-bottom: 0;
+    }
 </style>
 {% endblock %}
 
@@ -41,14 +54,59 @@
         </a>
     </div>
     
+    <!-- Authentication Method Selection -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
-            <h5 class="card-title mb-0">Google Analytics 4 API Credentials</h5>
+            <h5 class="card-title mb-0">Authentication Method</h5>
         </div>
         <div class="card-body">
-            {% if credentials_exist %}
+            <div class="auth-method-section">
+                <form method="post" action="{{ url_for('admin.ga4_config') }}" id="auth-method-form">
+                    <input type="hidden" name="submission_method" value="auth_selection">
+                    
+                    <div class="auth-method-option">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="auth_method" id="service_account" 
+                                   value="service_account" {% if current_auth_method == 'service_account' %}checked{% endif %}
+                                   onchange="toggleAuthMethod()">
+                            <label class="form-check-label" for="service_account">
+                                <strong>Service Account</strong>
+                                <p class="text-muted mb-0">
+                                    Uses a service account credentials JSON file for authentication. 
+                                    Recommended for server applications and automated tasks.
+                                </p>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="auth-method-option">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="auth_method" id="oauth2" 
+                                   value="oauth2" {% if current_auth_method == 'oauth2' %}checked{% endif %}
+                                   onchange="toggleAuthMethod()">
+                            <label class="form-check-label" for="oauth2">
+                                <strong>OAuth2 (API Authentication)</strong>
+                                <p class="text-muted mb-0">
+                                    Uses OAuth2 flow with a client ID and client secret. 
+                                    Suitable for applications where users need to authorize access.
+                                </p>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Service Account Configuration -->
+    <div class="card mb-4" id="service-account-config" {% if current_auth_method != 'service_account' %}style="display: none;"{% endif %}>
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">Service Account Configuration</h5>
+        </div>
+        <div class="card-body">
+            {% if credentials_exist and current_auth_method == 'service_account' %}
             <div class="alert alert-success">
-                <i class="fas fa-check-circle me-2"></i> GA4 credentials are configured and ready to use.
+                <i class="fas fa-check-circle me-2"></i> Service account credentials are configured and ready to use.
                 {% if existing_credentials %}
                 <hr>
                 <h6>Current Configuration:</h6>
@@ -60,7 +118,7 @@
             </div>
             {% else %}
             <div class="alert alert-warning">
-                <i class="fas fa-exclamation-circle me-2"></i> GA4 credentials are not yet configured. Please set up your credentials using one of the methods below.
+                <i class="fas fa-exclamation-circle me-2"></i> Service account credentials are not yet configured. Please set up your credentials using one of the methods below.
             </div>
             {% endif %}
             
@@ -86,6 +144,7 @@
                 <!-- JSON Input Tab -->
                 <div class="tab-pane fade show active" id="json" role="tabpanel" aria-labelledby="json-tab">
                     <form method="post" action="{{ url_for('admin.ga4_config') }}">
+                        <input type="hidden" name="auth_method" value="service_account">
                         <input type="hidden" name="submission_method" value="json">
                         
                         <div class="form-group mb-3">
@@ -107,6 +166,7 @@
                 <!-- Form Fields Tab -->
                 <div class="tab-pane fade" id="form" role="tabpanel" aria-labelledby="form-tab">
                     <form method="post" action="{{ url_for('admin.ga4_config') }}">
+                        <input type="hidden" name="auth_method" value="service_account">
                         <input type="hidden" name="submission_method" value="fields">
                         
                         <div class="row">
@@ -195,6 +255,7 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFA...
                 <!-- File Upload Tab -->
                 <div class="tab-pane fade" id="file" role="tabpanel" aria-labelledby="file-tab">
                     <form method="post" action="{{ url_for('admin.ga4_config') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="auth_method" value="service_account">
                         <input type="hidden" name="submission_method" value="file">
                         
                         <div class="form-group mb-3">
@@ -216,6 +277,88 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFA...
         </div>
     </div>
     
+    <!-- OAuth2 Configuration -->
+    <div class="card mb-4" id="oauth2-config" {% if current_auth_method != 'oauth2' %}style="display: none;"{% endif %}>
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">OAuth2 Configuration</h5>
+        </div>
+        <div class="card-body">
+            {% if oauth_configured and current_auth_method == 'oauth2' %}
+                {% set has_tokens = oauth_config.get('has_tokens', false) %}
+                {% if has_tokens %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i> OAuth2 is fully configured and authorized.
+                    <hr>
+                    <h6>Current Configuration:</h6>
+                    <ul>
+                        <li><strong>Client ID:</strong> {{ oauth_config.get('client_id', 'Not specified')[:20] }}...</li>
+                        <li><strong>Authorization:</strong> Active</li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i> OAuth2 credentials are configured but authorization is incomplete.
+                    <hr>
+                    <h6>Current Configuration:</h6>
+                    <ul>
+                        <li><strong>Client ID:</strong> {{ oauth_config.get('client_id', 'Not specified')[:20] }}...</li>
+                        <li><strong>Authorization:</strong> <span class="text-danger">Incomplete - click "Authorize with Google" below</span></li>
+                    </ul>
+                </div>
+                {% endif %}
+            {% else %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-circle me-2"></i> OAuth2 credentials are not yet configured.
+            </div>
+            {% endif %}
+            
+            <form method="post" action="{{ url_for('admin.ga4_config') }}">
+                <input type="hidden" name="auth_method" value="oauth2">
+                <input type="hidden" name="submission_method" value="oauth_config">
+                
+                <div class="mb-3">
+                    <label for="oauth_client_id" class="form-label required">OAuth2 Client ID</label>
+                    <input type="text" class="form-control" id="oauth_client_id" name="oauth_client_id" 
+                           placeholder="your-client-id.apps.googleusercontent.com"
+                           value="{{ oauth_config.get('client_id', '') }}">
+                    <small class="form-text text-muted">
+                        The OAuth2 client ID from your Google Cloud Console.
+                    </small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="oauth_client_secret" class="form-label required">OAuth2 Client Secret</label>
+                    <input type="password" class="form-control" id="oauth_client_secret" name="oauth_client_secret" 
+                           placeholder="Your client secret"
+                           value="{{ oauth_config.get('client_secret', '') }}">
+                    <small class="form-text text-muted">
+                        The OAuth2 client secret from your Google Cloud Console.
+                    </small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="oauth_redirect_uri" class="form-label">Redirect URI</label>
+                    <input type="text" class="form-control" id="oauth_redirect_uri" name="oauth_redirect_uri" 
+                           value="{{ url_for('admin.ga4_oauth_callback', _external=True) }}" readonly>
+                    <small class="form-text text-muted">
+                        Add this redirect URI to your OAuth2 client configuration in Google Cloud Console.
+                    </small>
+                </div>
+                
+                <div class="form-group d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save Configuration
+                    </button>
+                    {% if oauth_configured %}
+                    <a href="{{ url_for('admin.ga4_authorize_oauth') }}" class="btn btn-success">
+                        <i class="fas fa-sign-in-alt me-2"></i>Authorize with Google
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <div class="card">
         <div class="card-header bg-info text-white">
             <h5 class="card-title mb-0">
@@ -223,42 +366,30 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFA...
             </h5>
         </div>
         <div class="card-body">
-            <ol class="mb-0">
-                <li class="mb-2">Go to the <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
-                <li class="mb-2">Create a new project or select an existing one</li>
-                <li class="mb-2">Enable the Google Analytics Data API and Google Analytics Admin API:
-                    <ul>
-                        <li>Navigate to "APIs & Services" > "Library"</li>
-                        <li>Search for "Google Analytics Data API" and enable it</li>
-                        <li>Search for "Google Analytics Admin API" and enable it</li>
-                    </ul>
-                </li>
-                <li class="mb-2">Create a service account:
-                    <ul>
-                        <li>Navigate to "IAM & Admin" > "Service Accounts"</li>
-                        <li>Click "Create Service Account"</li>
-                        <li>Enter a name and description for the service account</li>
-                        <li>Click "Create and Continue"</li>
-                    </ul>
-                </li>
-                <li class="mb-2">Create a JSON key for the service account:
-                    <ul>
-                        <li>Once the service account is created, click on it</li>
-                        <li>Go to the "Keys" tab</li>
-                        <li>Click "Add Key" > "Create new key"</li>
-                        <li>Select "JSON" as the key type and click "Create"</li>
-                        <li>The JSON key file will be downloaded to your computer</li>
-                    </ul>
-                </li>
-                <li class="mb-2">Give the service account access to your Google Analytics properties:
-                    <ul>
-                        <li>Go to <a href="https://analytics.google.com/" target="_blank">Google Analytics</a></li>
-                        <li>Navigate to Admin > Account Access Management</li>
-                        <li>Add the service account email (found in the JSON file) with appropriate permissions</li>
-                    </ul>
-                </li>
-                <li>Use the downloaded JSON file to configure GA4 credentials in this application</li>
-            </ol>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Service Account Instructions</h6>
+                    <ol class="small">
+                        <li>Go to the <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
+                        <li>Create/select a project</li>
+                        <li>Enable Google Analytics Data API and Admin API</li>
+                        <li>Create a service account</li>
+                        <li>Create and download a JSON key</li>
+                        <li>Add the service account email to your GA4 property</li>
+                    </ol>
+                </div>
+                <div class="col-md-6">
+                    <h6>OAuth2 Instructions</h6>
+                    <ol class="small">
+                        <li>Go to the <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
+                        <li>Create/select a project</li>
+                        <li>Enable Google Analytics Data API and Admin API</li>
+                        <li>Create OAuth2 credentials</li>
+                        <li>Add the redirect URI shown above</li>
+                        <li>Copy the client ID and secret</li>
+                    </ol>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -266,6 +397,24 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFA...
 
 {% block scripts %}
 <script>
+    function toggleAuthMethod() {
+        var serviceAccountRadio = document.getElementById('service_account');
+        var oauth2Radio = document.getElementById('oauth2');
+        var serviceAccountConfig = document.getElementById('service-account-config');
+        var oauth2Config = document.getElementById('oauth2-config');
+        
+        if (serviceAccountRadio.checked) {
+            serviceAccountConfig.style.display = 'block';
+            oauth2Config.style.display = 'none';
+        } else if (oauth2Radio.checked) {
+            serviceAccountConfig.style.display = 'none';
+            oauth2Config.style.display = 'block';
+        }
+        
+        // Submit the form to save the authentication method
+        document.getElementById('auth-method-form').submit();
+    }
+    
     function toggleAdvancedFields() {
         var advancedFields = document.getElementById('advanced_fields');
         var checkbox = document.getElementById('show_advanced');
@@ -275,6 +424,22 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFA...
         } else {
             advancedFields.style.display = 'none';
         }
+    }
+    
+    function startOAuth2Flow() {
+        // Create OAuth2 authorization URL
+        const baseUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+        const params = new URLSearchParams({
+            response_type: 'code',
+            client_id: '{{ oauth_config.get("client_id", "") }}',
+            redirect_uri: '{{ url_for("admin.ga4_oauth_callback", _external=True) }}',
+            scope: 'https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/analytics.manage.users',
+            access_type: 'offline',
+            prompt: 'consent'
+        });
+        
+        // Redirect to Google OAuth2 authorization page
+        window.location.href = `${baseUrl}?${params.toString()}`;
     }
 </script>
 {% endblock %}
